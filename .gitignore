@@ -1,0 +1,10 @@
+# Python cache and others
+*.pyc
+*/__pycache__
+
+# Development
+dev.env
+.idea
+.venv
+*.env
+.DS_Store
