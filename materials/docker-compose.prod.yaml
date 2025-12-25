@@ -1,6 +1,6 @@
 services:
   bot:
-    image: 21id-bot:latest-local
+    image: 21id-bot:latest
     container_name: bot
     restart: unless-stopped
     environment:
