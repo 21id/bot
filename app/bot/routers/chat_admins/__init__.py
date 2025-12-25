@@ -11,7 +11,7 @@ def register_filters() -> Router:
 
     # Applying filters to check if user is admin in a chat (group / supergroup)
     admin_in_community = (IsAdmin(is_admin=True) and
-                          F.chat.type in ["group", "supergroup"])
+                          F.chat.type.in_({"group", "supergroup"}))
 
     router.message.filter(admin_in_community)
     router.callback_query.filter(admin_in_community)
