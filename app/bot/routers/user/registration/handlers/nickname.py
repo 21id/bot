@@ -53,7 +53,10 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
     # Otherwise - see if user is in the database
     else:
         user = await container.user_service.get_by_telegram_id(user_tg_id)
-        nickname_ = user.nickname
+        try:
+            nickname_ = user.nickname
+        except:
+            raise Exception("User for your account exists, but doesn't have a nickname")
 
     # If user is present in database
     if user:
@@ -63,7 +66,7 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
         # But if user has other Telegram ID - deny entry
         else:
             text = (
-                f"⚠️ Dear user, {user.nickname} is registered under other "
+                f"⚠️ Dear user, {nickname_} is registered under other "
                 f"Telegram account.\n\nIf you please to move it to your current account"
                 " - please, contact @megaplov\n\nℹ️ If that's not you, "
                 "please - send your School 21 student nickname again"
@@ -75,13 +78,6 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
     # Getting / updating student info from School 21 API
     student = await container.s21api_client.get_student_by_nickname(nickname_)
 
-    # Handling BLOCKED student error
-    if student.status == StudentStatus.BLOCKED:
-        raise Exception(
-            "21ID can't work with BLOCKED students on School 21 Platform. If you "
-            "believe this is a mistake (which could happen) - please contact @megaplov"
-        )
-
     # If error has occurred on request to database, and student isn't none or found
     if (isinstance(student, ErrorResponseDTO) or
             (not isinstance(student, ParticipantV1DTO) and not student is None)):
@@ -89,6 +85,13 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
 
     # If student has been found in API
     if student:
+        # Handling BLOCKED student error
+        if student.status == StudentStatus.BLOCKED:
+            raise Exception(
+                "21ID can't work with BLOCKED students on School 21 Platform. If you "
+                "believe this is a mistake (which could happen) - please contact @megaplov"
+            )
+
         user_id = request.from_user.id
 
         # If user is joining a chat - check if he can be accepted there
@@ -112,7 +115,7 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
                     pass
 
                 text = (
-                    f"⚠️ Dear {user.nickname}!\n\nYou're denied from joining"
+                    f"⚠️ Dear {nickname_}!\n\nYou're denied from joining"
                     f" '{chat.chat_title}' based on chat join policy:\n"
                     f"Intensive allowed: {"✅" if chat.intensive_allowed else '❌'}\n"
                     f"Core allowed: {"✅" if chat.core_allowed else '❌'}\n\nIf you "
@@ -174,7 +177,7 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
 
         if not is_email_sent:
             text = (
-                f"⚠️ Dear {user.nickname}, there was a problem with your "
+                f"⚠️ Dear {nickname_}, there was a problem with your "
                 "OTP code - it can't reach your mailbox. We are very sorry for "
                 "the inconvenience.\n\nℹ️ Try again by sending your nickname, and "
                 "if you still can't get it - contact @megaplov"
