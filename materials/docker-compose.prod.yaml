@@ -5,6 +5,7 @@ services:
     restart: unless-stopped
     environment:
       BOTAPI_TOKEN: ${BOTAPI_TOKEN}
+      ADMIN_ID: ${ADMIN_ID}
       MONGO_USER: ${MONGO_USER}
       MONGO_PASSWORD: ${MONGO_PASSWORD}
       MONGO_HOSTS: ${MONGO_HOSTS}

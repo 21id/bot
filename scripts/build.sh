@@ -10,10 +10,12 @@ else
 fi
 
 # Prompting user to choose build tag
-echo "- Build tag: 21id_bot:latest (1,default), ghcr.io/21id/bot:latest-manual (2)"
+echo "- Build tag: 21id_bot:latest (1,default), ghcr.io/21id/bot:latest-manual (2), ghcr.io/21id/bot:latest (3)"
 read -p "... " tag_id
 if [[ "${tag_id}" == "2" ]]; then
-  tag=ghcr.io/21id/bot:latest
+  tag=ghcr.io/21id/bot:latest-manual
+elif [[ "${tag_id}" == "3" ]]; then
+  tag=ghcr.io/21id/bot:latest-manual
 else
   tag=21id_bot:latest
 fi
@@ -22,7 +24,7 @@ fi
 ${command} build -t ${tag} .
 
 # If tag with GHCR is chosen - ask if user want to push it
-if [[ "${tag_id}" == "2" ]]; then
+if [[ "${tag_id}" == "2" || "${tag_id}" == "3" ]]; then
   echo "- Push? N (default) / Y"
   read -p "... " push
   if [[ "${push}" == "y" || "${push}" == "Y" ]]; then

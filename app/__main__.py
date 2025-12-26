@@ -12,6 +12,7 @@ async def main(
     s21api_login: str,
     s21api_password: str,
     botapi_token: str,
+    admin_id: int,
     mongo_uri: str,
     mongo_dbname: str,
     templates_basedir: str,
@@ -28,8 +29,8 @@ async def main(
     if not all([s21api_base_url, s21api_auth_url, s21api_login, s21api_password,
                 s21api_auth_realm]):
         raise Exception("Base and Auth URLs, credentials and auth realm are required")
-    if not all([botapi_token]):
-        raise Exception("Bot API token is required")
+    if not all([botapi_token, admin_id]):
+        raise Exception("Bot API token and Admin TG ID are required")
     if not all([mongo_uri, mongo_dbname]):
         raise Exception("Mongo URI and DB name are required")
     if not all([redis_host, redis_password]):
@@ -70,6 +71,7 @@ if __name__ == "__main__":
     s21api_login_ = getenv("S21API_LOGIN")
     s21api_password_ = getenv("S21API_PASSWORD")
     botapi_token_ = getenv("BOTAPI_TOKEN")
+    admin_id_ = int(getenv("ADMIN_ID"))
     mongo_uri_ = getenv("MONGO_URI")
     mongo_dbname_ = getenv("MONGO_DB_NAME")
     templates_basedir_ = getenv("TEMPLATES_BASEDIR")
@@ -86,7 +88,7 @@ if __name__ == "__main__":
             s21api_base_url=s21api_base_url_, s21api_auth_url=s21api_auth_url_,
             s21api_auth_realm=s21api_auth_realm_, s21api_login=s21api_login_,
             s21api_password=s21api_password_, botapi_token=botapi_token_,
-            mongo_uri=mongo_uri_, mongo_dbname=mongo_dbname_,
+            admin_id=admin_id_, mongo_uri=mongo_uri_, mongo_dbname=mongo_dbname_,
             templates_basedir=templates_basedir_, smtp_host=smtp_host_,
             smtp_port=smtp_port_, smtp_login=smtp_login_,
             smtp_password=smtp_password_, smtp_sender=smtp_sender_,
