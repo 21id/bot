@@ -168,7 +168,7 @@ class S21APIClient:
     def handle_error(data: dict) -> None:
         """Raising an exception, if ErrorResponseDTO has been returned."""
         error = ErrorResponseDTO(**data)
-        message = f"Got {error.status}'d: {error.code} ({error.message})"
+        message = f"Got an error: {error}"
         raise Exception(message)
 
     # -------- AUTH --------
