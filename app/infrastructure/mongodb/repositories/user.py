@@ -2,7 +2,7 @@ from typing import Any
 from bson import ObjectId
 
 from app.domain.user.user import User
-from app.infrastructure.database.client import MongoClient
+from app.infrastructure.mongodb.client import MongoClient
 
 from pymongo.results import UpdateResult, InsertOneResult
 from motor.motor_asyncio import AsyncIOMotorCursor

@@ -1,6 +1,6 @@
 from typing import Any
 
-from app.infrastructure.database.client import MongoClient
+from app.infrastructure.mongodb.client import MongoClient
 
 from pymongo.results import UpdateResult
 

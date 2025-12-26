@@ -1,4 +1,4 @@
-from app.infrastructure.database.client import MongoClient
+from app.infrastructure.mongodb.client import MongoClient
 from app.infrastructure.s21.v1.client import S21APIClient
 from app.infrastructure.s21.v1.models.responses.campus import Campus
 

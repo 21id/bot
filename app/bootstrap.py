@@ -1,13 +1,13 @@
 from dataclasses import dataclass
 
 from app.domain.chat.service import ChatService
-from app.infrastructure.database.client import MongoClient
-from app.infrastructure.database.repositories.chat import ChatRepository
+from app.infrastructure.mongodb.client import MongoClient
+from app.infrastructure.mongodb.repositories.chat import ChatRepository
 from app.infrastructure.mailer.client import MailerClient
 from app.infrastructure.mailer.renderer import TemplateRenderer
 from app.infrastructure.s21.v1.models.auth.credentials import Credentials
 from app.infrastructure.s21.v1.client import S21APIClient
-from app.infrastructure.database.repositories.user import UserRepository
+from app.infrastructure.mongodb.repositories.user import UserRepository
 from app.domain.user.service import UserService
 
 from redis.asyncio import Redis

@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import AsyncGenerator
 
 from app.domain.user.user import User
-from app.infrastructure.database.repositories.user import UserRepository
+from app.infrastructure.mongodb.repositories.user import UserRepository
 
 
 class UserService:

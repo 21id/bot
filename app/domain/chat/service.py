@@ -1,5 +1,5 @@
 from app.domain.chat.chat import Chat
-from app.infrastructure.database.repositories.chat import ChatRepository
+from app.infrastructure.mongodb.repositories.chat import ChatRepository
 
 
 class ChatService:
