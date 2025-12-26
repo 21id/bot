@@ -7,9 +7,10 @@ from pydantic import BaseModel
 class ParticipantV1DTO(BaseModel):
     """Student API model."""
     login: str # bibikov-lukyan
-    className: str # ADONIS
 
-    parallelName: str | None # Core program
+    # Can be None if student is blocked (or other reason, somehow)
+    className: str | None = None # ADONIS
+    parallelName: str | None = None # Core program / I_CAMPUS_INTENSIVE-ID_DDMMYY
 
     # Exp and levels
     expValue: int # 100

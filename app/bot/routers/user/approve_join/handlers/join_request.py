@@ -27,11 +27,12 @@ async def join_request(
         chat = await container.chat_service.get_by_telegram_id(chat_id)
 
         # If user can't be accepted due to chat settings - deny his request
-        acceptance_requirements = [
-            user.parallel != "Core education" and chat.intensive_allowed,
-            user.parallel == "Core education" and chat.core_allowed
-        ]
-        if not all(acceptance_requirements):
+        acceptance_requirements = (
+                (user.parallel != "Core program" and chat.intensive_allowed) or
+                (user.parallel == "Core program" and chat.core_allowed)
+        )
+
+        if not acceptance_requirements:
             try:
                 await bot(DeclineChatJoinRequest(chat_id=chat_id, user_id=user_id))
             except:
@@ -41,7 +42,8 @@ async def join_request(
                 f"⚠️ Dear {user.nickname}!\n\nYou're denied from joining"
                 f" '{chat_title}' based on chat join policy:\n"
                 f"Intensive allowed: {"✅" if chat.intensive_allowed else '❌'}\n"
-                f"Core allowed: {"✅" if chat.core_allowed else '❌'}"
+                f"Core allowed: {"✅" if chat.core_allowed else '❌'}\n\nIf you "
+                "think that it's wrong denial - please, contact @megaplov"
             )
 
             await bot.send_message(user_id, text=text)

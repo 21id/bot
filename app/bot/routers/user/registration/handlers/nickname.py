@@ -1,5 +1,5 @@
 from app.bot.filters.user_exists import UserExists
-from app.bot.utilities.reply_edit import answer
+from app.domain.user.status import StudentStatus
 from app.utilities import random
 from app.bootstrap import Container
 from app.infrastructure.s21.v1.models.responses.error import ErrorResponseDTO
@@ -75,17 +75,17 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
     # Getting / updating student info from School 21 API
     student = await container.s21api_client.get_student_by_nickname(nickname_)
 
+    # Handling BLOCKED student error
+    if student.status == StudentStatus.BLOCKED:
+        raise Exception(
+            "21ID can't work with BLOCKED students on School 21 Platform. If you "
+            "believe this is a mistake (which could happen) - please contact @megaplov"
+        )
+
     # If error has occurred on request to database, and student isn't none or found
     if (isinstance(student, ErrorResponseDTO) or
             (not isinstance(student, ParticipantV1DTO) and not student is None)):
-        text = (
-            f"❗️ Error has occurred\n\n"
-            f"Message: {student.message}\n\n"
-            "✍️ Please, notify @megaplov about this problem from your perspective"
-        )
-
-        await reply_edit.answer(request, text=text)
-        return
+        raise Exception(f"Couldn't retrieve student data, response: {student}")
 
     # If student has been found in API
     if student:
@@ -99,11 +99,13 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
 
             # If user can't be accepted due to chat settings - deny his join request,
             # but anyway move further
-            acceptance_requirements = [
-                user.parallel != "Core education" and chat.intensive_allowed,
-                user.parallel == "Core education" and chat.core_allowed
-            ]
-            if not all(acceptance_requirements):
+            # Important: using student object, because user may be undefined
+            acceptance_requirements = (
+                    (student.parallelName != "Core program" and chat.core_allowed) or
+                    (student.parallelName == "Core program" and chat.intensive_allowed)
+            )
+
+            if not acceptance_requirements:
                 try:
                     await bot(DeclineChatJoinRequest(chat_id=chat_id, user_id=user_id))
                 except:
@@ -113,9 +115,10 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
                     f"⚠️ Dear {user.nickname}!\n\nYou're denied from joining"
                     f" '{chat.chat_title}' based on chat join policy:\n"
                     f"Intensive allowed: {"✅" if chat.intensive_allowed else '❌'}\n"
-                    f"Core allowed: {"✅" if chat.core_allowed else '❌'}\n\n"
-                    "- - - - - \n\n🪪 But you are still more than welcome to use 21ID "
-                    f"services, just without joining {chat_title} - for that, follow "
+                    f"Core allowed: {"✅" if chat.core_allowed else '❌'}\n\nIf you "
+                    "think that it's wrong denial - please, contact @megaplov\n\n"
+                    "- - - - - \n\n🪪 But you are more than welcome to join 21ID "
+                    f" - just without joining {chat_title}. For that, follow "
                     "the instructions below"
                 )
 

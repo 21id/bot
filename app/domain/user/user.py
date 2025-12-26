@@ -21,9 +21,10 @@ class User(BaseModel_):
 
     # School 21 student information
     nickname: str = Field(alias="login")
-    wave_name: str = Field(alias="className")
+    # YY_MM_CAMPUS, example: 24_03_SKD
+    wave_name: str | None = Field(alias="className", default=None)
     # Core program or intensive (I_'CAMPUS'_'INTENSIVE-ID'_'DDMMYY')
-    parallel: str = Field(alias="parallelName")
+    parallel: str | None = Field(alias="parallelName", default=None)
     campus: Campus
 
     is_verified: bool
