@@ -15,7 +15,7 @@ read -p "... " tag_id
 if [[ "${tag_id}" == "2" ]]; then
   tag=ghcr.io/21id/bot:latest-manual
 elif [[ "${tag_id}" == "3" ]]; then
-  tag=ghcr.io/21id/bot:latest-manual
+  tag=ghcr.io/21id/bot:latest
 else
   tag=21id_bot:latest
 fi
