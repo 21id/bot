@@ -1,5 +1,5 @@
 from app.bootstrap import Container
-from app.bot.routers.chat_admins.router import router
+from app.bot.routers.chat.admins.router import router
 
 from aiogram.types import Message
 from aiogram.filters import Command, CommandObject
@@ -10,7 +10,7 @@ async def disable_description(message: Message, container: Container) -> None:
     """Setting description to None, if admin chose to disable it."""
 
     # Setting description on join to None
-    await container.chat_service.set_join_desc(message.chat.id)
+    await container.chat_service.set_desc(message.chat.id)
 
     text = (
         "Successfully removed description on join!"
@@ -25,7 +25,7 @@ async def set_description(message: Message, command: CommandObject,
     description: str = command.args
 
     # Setting description on join to None
-    await container.chat_service.set_join_desc(message.chat.id, description)
+    await container.chat_service.set_desc(message.chat.id, description)
 
     text = (
         f"Successfully set description to..\n\n{description}"

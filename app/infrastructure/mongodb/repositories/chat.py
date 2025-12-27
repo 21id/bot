@@ -3,6 +3,7 @@ from typing import Any
 from app.infrastructure.mongodb.client import MongoClient
 
 from pymongo.results import UpdateResult
+from motor.motor_asyncio import AsyncIOMotorCursor
 
 
 class ChatRepository:
@@ -17,8 +18,16 @@ class ChatRepository:
 
         self.collection = client.chat()
 
+    def get_all(self) -> AsyncIOMotorCursor[dict]:
+        """Get all chats."""
+        return self.collection.find({})
+
+    def get_all_public(self) -> AsyncIOMotorCursor[dict]:
+        """Get all public chats."""
+        return self.collection.find({"is_public": True})
+
     async def get_by_telegram_id(self, telegram_id: int) -> dict | None:
-        """Get user by his Telegram id."""
+        """Get chat by its Telegram id."""
         return await self.collection.find_one({"chat_id": telegram_id})
 
     async def upsert(self, chat_data: dict, chat_id: int) -> dict | None:

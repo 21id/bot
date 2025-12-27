@@ -13,6 +13,10 @@ class Chat(BaseModel_):
 
     chat_id: int
 
+    # Base chat info
+    title: Optional[str] = None
+    description: Optional[str] = None
+
     # Status for chat join policy
     intensive_allowed: bool = False
     core_allowed: bool = True
@@ -22,3 +26,9 @@ class Chat(BaseModel_):
 
     # Description, which user receives on join request approval
     desc_on_join: Optional[str] = None
+
+    # Join link, which is used in all communities lists
+    join_link: Optional[str] = None
+
+    # Boolean value, which when set to True - marks that chat is a public community
+    is_public: Optional[bool] = False

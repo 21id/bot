@@ -1,7 +1,6 @@
 from typing import Any
 from bson import ObjectId
 
-from app.domain.user.user import User
 from app.infrastructure.mongodb.client import MongoClient
 
 from pymongo.results import UpdateResult, InsertOneResult
@@ -32,7 +31,7 @@ class UserRepository:
         """Get user by invitation OTP."""
         return await self.collection.find_one({"invite_otp": invite_otp})
 
-    def search_by_nickname(self, partial_nickname: str) -> AsyncIOMotorCursor[User]:
+    def search_by_nickname(self, partial_nickname: str) -> AsyncIOMotorCursor[dict]:
         """Searching user by his Platform's nickname."""
         return self.collection.find(
             {"nickname": {"$regex": partial_nickname, "$options": "i"}}

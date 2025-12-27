@@ -1,8 +1,10 @@
 from .router import router
-from .handlers import (set_id_topic, base_create, list_settings, set_join_rules,
-                       set_description)
+from .handlers import (
+    set_id_topic, base_create, list_settings, set_join_rules, set_join_description,
+    set_join_link, set_title, set_chat_description
+)
 
-from aiogram import Router, F
+from aiogram import Router
 
 
 def register_filters() -> Router:
@@ -10,8 +12,7 @@ def register_filters() -> Router:
     from app.bot.filters.is_admin import IsAdmin
 
     # Applying filters to check if user is admin in a chat (group / supergroup)
-    admin_in_community = (IsAdmin(is_admin=True) and
-                          F.chat.type.in_({"group", "supergroup"}))
+    admin_in_community = IsAdmin(is_admin=True)
 
     router.message.filter(admin_in_community)
     router.callback_query.filter(admin_in_community)

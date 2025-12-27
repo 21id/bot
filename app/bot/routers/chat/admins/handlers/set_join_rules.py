@@ -1,5 +1,5 @@
 from app.bootstrap import Container
-from app.bot.routers.chat_admins.router import router
+from app.bot.routers.chat.admins.router import router
 
 from aiogram.types import Message
 from aiogram.filters import Command, CommandObject

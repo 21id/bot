@@ -54,11 +54,9 @@ class UserService:
         cursor = self.repo.search_by_nickname(partial_nickname)
 
         async for document in cursor:
-            user = None
             if document:
                 user = User(**document)
-
-            yield user
+                yield user
 
     async def upsert(self, user: User, user_uuid: str | None = None) -> None:
         """Upsert user."""
