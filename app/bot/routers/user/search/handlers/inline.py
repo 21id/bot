@@ -46,8 +46,13 @@ async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> No
         # If user is verified, means he contacted the bot and bot can send links to him
         if user.is_verified:
             full_description += (
-                "\n\nBecause he's registered in 21ID, you can try sending a "
-                "notification to him, using button below"
+                "\n\n✅ Because he's registered in 21ID, you can try contacting him, "
+                "using buttons below"
+            )
+        else:
+            full_description += (
+                "\n\n⚠️ This user isn't verified, but you can try contacting him, "
+                "using buttons below"
             )
 
         # Checking if there is Telegram userid associated with user
@@ -55,14 +60,15 @@ async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> No
             # If it is - create contact keyboard
             chat_info = await bot.get_chat(user.telegram_id)
             if not chat_info.has_private_forwards:
-                keyboard = student_deeplink_kb.get(chat_id=user.telegram_id)
+                keyboard = student_deeplink_kb.get(chat_id=user.telegram_id,
+                                                   nickname=user.nickname)
             else:
                 keyboard = student_deeplink_kb.get(nickname=user.nickname)
-        else:
+        elif not user.is_verified:
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[[
                     InlineKeyboardButton(
-                        text="❌ Isn't registered in 21ID",
+                        text="❌ User has not ",
                         callback_data="none",
                     )
                 ]]
@@ -88,8 +94,8 @@ async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> No
             short_description = f"Can't find student by nickname '{partial_nickname}'"
 
             full_description = (
-                f"Nickname '{partial_nickname}' (even if it's partial) doesn't belong to "
-                f"any student or 21ID user"
+                f"Nickname '{partial_nickname}' (even if it's partial) doesn't belong "
+                "to any student or 21ID user"
             )
 
             results = [

@@ -25,13 +25,26 @@ async def notify_user(callback: CallbackQuery, callback_data: SendNotification,
         await callback.answer(text, show_alert=True)
         return
 
+    # If user isn't found (edge case for old links)
+    if not user:
+        text = "You're trying to notify not found user!\n\nPlease try again from start"
+
+        await callback.answer(text, show_alert=True)
+        return
+
+    # If user is in database, but has no Telegram ID (invited or imported)
+    if not user.telegram_id:
+        text = "User has no Telegram ID\n\nPlease try again from start"
+
+        await callback.answer(text, show_alert=True)
+        return
+
     chat_info = await bot.get_chat(callback.from_user.id)
     if not chat_info.has_private_forwards:
         keyboard = student_deeplink_kb.get(chat_id=callback.from_user.id)
-        is_private = False
     else:
-        keyboard = None
-        is_private = True
+        keyboard = student_deeplink_kb.get(chat_id=callback.from_user.id,
+                                           nickname=user.nickname)
 
     try:
         text = (
@@ -44,18 +57,14 @@ async def notify_user(callback: CallbackQuery, callback_data: SendNotification,
 
         await bot.send_message(user.telegram_id, text, reply_markup=keyboard)
 
-        text = f"Successfully sent a notification to {user.nickname}!"
+        text = (
+            f"Successfully sent a notification to {user.nickname}!\n⚠️He can see "
+            f"your nickname and contact info"
 
-        # Notifying user of privacy restrictions
-        if is_private:
-            text += (
-                "\n\nBut because of your privacy restrictions (disabling forwarding), "
-                "I couldn't add a button to your profile - so peer may take more time "
-                "to find you"
-            )
+        )
     except:
         text = (
-            f"{user.nickname} has blocked 21ID bot or deleted his account, "
+            f"⛔ {user.nickname} has blocked 21ID bot or deleted his telegram account, "
             f"can't reach him!"
         )
 

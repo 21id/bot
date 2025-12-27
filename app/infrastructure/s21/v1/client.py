@@ -16,7 +16,7 @@ class S21APIClient:
     session: Session | None
 
     def __init__(self, base_url: str, auth_url: str, auth_realm: str,
-                 credentials: Credentials) -> None:
+                 credentials: Credentials | None) -> None:
         """Initialize S21 API class."""
         # Parameters check
         if not all([base_url, auth_url]):
@@ -80,7 +80,8 @@ class S21APIClient:
         else:
             raise ValueError("Session info is required, when using from_session")
 
-        return cls(base_url=base_url, auth_url=auth_url, auth_realm=auth_realm)
+        return cls(base_url=base_url, auth_url=auth_url, auth_realm=auth_realm,
+                   credentials=None)
 
     # ------ REQUESTS ------
 
@@ -129,7 +130,7 @@ class S21APIClient:
         # Catching Forbidden error
         if response.status == 403:
             data = await response.json()
-            self.handle_error(data)
+            self.handle_error(data, response)
 
         # Return error DTO, if status differs from expected
         if response.status != expected_status:
@@ -259,7 +260,7 @@ class S21APIClient:
 
         # And if it's not "Not found" - raising an error
         data = await response.json()
-        return self.handle_error(data)
+        return self.handle_error(data, response)
 
     async def get_student_workplace_by_nickname(self, nickname: str) -> (
             ParticipantWorkstationV1DTO | ErrorResponseDTO | None):
