@@ -16,7 +16,7 @@ def get(chat_id: int = None, nickname: str = None) -> (
 
     if nickname:
         builder.row(InlineKeyboardButton(
-            text=f"📤 Send notification (🪪 21ID)",
+            text=f"📤 Send notification",
             callback_data=SendNotification(nickname=nickname).pack(),
         ))
 

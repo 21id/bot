@@ -14,6 +14,9 @@ from aiogram.types import InlineQuery, InlineQueryResultArticle, \
 async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> None:
     """Searching user by his Platform's nickname."""
 
+    # Getting user who invoked inline mode. If there is no user - provide minimal info
+    invoke_user = await container.user_service.get_by_telegram_id(query.from_user.id)
+
     # Getting every student that contains nickname
     partial_nickname = query.query
     if not partial_nickname:
@@ -34,42 +37,64 @@ async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> No
             f"wave {user.wave_name}"
         )
 
-        # Notifying that user is logged in the AWP
-        workplace = await container.s21api_client.get_student_workplace_by_nickname(
-            user.nickname)
-        if workplace:
-            full_description += (
-                f"\n🖥 {user.nickname} is currently logged in cluster"
-                f" {workplace.clusterName} on {workplace.row}.{workplace.number}"
-            )
+        # Give student info if user is registered
+        if invoke_user:
+            # Notifying that user is logged in the AWP
+            workplace = await container.s21api_client.get_student_workplace_by_nickname(
+                user.nickname)
+            if workplace:
+                full_description += (
+                    f"\n🖥 {user.nickname} is currently logged in cluster"
+                    f" {workplace.clusterName} on {workplace.row}.{workplace.number}"
+                )
+            else:
+                full_description += (
+                    f"\n🖥 {user.nickname} is not in campus"
+                )
 
-        # If user is verified, means he contacted the bot and bot can send links to him
-        if user.is_verified:
-            full_description += (
-                "\n\n✅ Because he's registered in 21ID, you can try contacting him, "
-                "using buttons below"
-            )
+            # If user is verified, means he contacted the bot and bot can send links to him
+            if user.is_verified:
+                full_description += (
+                    "\n\n✅ Because he's registered in 21ID, you can try contacting him, "
+                    "using buttons below"
+                )
+            else:
+                full_description += (
+                    "\n\n⚠️ This user isn't verified, but you can try contacting him, "
+                    "using buttons below"
+                )
+
+            # Checking if there is Telegram userid associated with user
+            if user.telegram_id and user.is_verified:
+                # If it is - create contact keyboard
+                chat_info = await bot.get_chat(user.telegram_id)
+                if not chat_info.has_private_forwards:
+                    keyboard = student_deeplink_kb.get(chat_id=user.telegram_id,
+                                                       nickname=user.nickname)
+                else:
+                    keyboard = student_deeplink_kb.get(nickname=user.nickname)
+            else:
+                keyboard = InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        InlineKeyboardButton(
+                            text="❌ Can't find his Telegram",
+                            callback_data="none",
+                        )
+                    ]]
+                )
+        # If user isn't registered in 21ID - providing minimal info
         else:
             full_description += (
-                "\n\n⚠️ This user isn't verified, but you can try contacting him, "
-                "using buttons below"
+                f"\n\n🪪 Register in 21ID to get more information about student!"
             )
 
-        # Checking if there is Telegram userid associated with user
-        if user.telegram_id:
-            # If it is - create contact keyboard
-            chat_info = await bot.get_chat(user.telegram_id)
-            if not chat_info.has_private_forwards:
-                keyboard = student_deeplink_kb.get(chat_id=user.telegram_id,
-                                                   nickname=user.nickname)
-            else:
-                keyboard = student_deeplink_kb.get(nickname=user.nickname)
-        elif not user.is_verified:
+            bot_url = f"https://t.me/{(await query.bot.get_me()).username}"
+
             keyboard = InlineKeyboardMarkup(
                 inline_keyboard=[[
                     InlineKeyboardButton(
-                        text="❌ User has not ",
-                        callback_data="none",
+                        text="🪪 Register for free (3 mins)",
+                        url=bot_url,
                     )
                 ]]
             )
@@ -121,33 +146,53 @@ async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> No
                 f"wave {student.className}"
             )
 
-            # Notifying that user is logged in the AWP
-            workplace = await container.s21api_client.get_student_workplace_by_nickname(
-                student.login)
-            if workplace:
+            if invoke_user:
+                # Notifying that user is logged in the AWP
+                workplace = await container.s21api_client.get_student_workplace_by_nickname(
+                    student.login)
+                if workplace:
+                    full_description += (
+                        f"\n🖥 {student.login} is currently logged in "
+                        f"cluster {workplace.clusterName} on {workplace.row}"
+                        f".{workplace.number}"
+                    )
+                else:
+                    full_description += (
+                        f"\n🖥 {student.login} not in campus"
+                    )
+
                 full_description += (
-                    f"\n🖥 {student.login} is currently logged in "
-                    f"cluster {workplace.clusterName} on {workplace.row}"
-                    f".{workplace.number}"
+                    "\n\n❌ Because he isn't registered in 21ID, you can't contact him "
+                    "right away.\n\n🪪 But you are more than welcome to invite him to 21ID "
+                    "by using the button below - we would send him a notification that "
+                    "you're looking for him"
                 )
 
-            full_description += (
-                "\n\n❌ Because he isn't registered in 21ID, you can't contact him "
-                "right away.\n\n🪪 But you are more than welcome to invite him to 21ID "
-                "by using the button below - we would send him a notification that "
-                "you're looking for him"
-            )
+                keyboard = InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        InlineKeyboardButton(
+                            text=f"🪪 Invite {student.login} to 21ID",
+                            callback_data=InviteStudent(
+                                invited_login=student.login,
+                            ).pack(),
+                        )
+                    ]]
+                )
+            else:
+                full_description += (
+                    f"\n\n🪪 Register in 21ID to get more information about student!"
+                )
 
-            keyboard = InlineKeyboardMarkup(
-                inline_keyboard=[[
-                    InlineKeyboardButton(
-                        text=f"🪪 Invite {student.login} to 21ID",
-                        callback_data=InviteStudent(
-                            invited_login=student.login,
-                        ).pack(),
-                    )
-                ]]
-            )
+                bot_url = f"https://t.me/{(await query.bot.get_me()).username}"
+
+                keyboard = InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        InlineKeyboardButton(
+                            text="🪪 Register for free (3 mins)",
+                            url=bot_url,
+                        )
+                    ]]
+                )
 
             results = [
                 InlineQueryResultArticle(
