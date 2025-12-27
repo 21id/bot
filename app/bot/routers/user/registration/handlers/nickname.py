@@ -116,7 +116,7 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
 
                 text = (
                     f"⚠️ Dear {nickname_}!\n\nYou're denied from joining"
-                    f" '{chat.chat_title}' based on chat join policy:\n"
+                    f" '{chat_title}' based on chat join policy:\n"
                     f"Intensive allowed: {"✅" if chat.intensive_allowed else '❌'}\n"
                     f"Core allowed: {"✅" if chat.core_allowed else '❌'}\n\nIf you "
                     "think that it's wrong denial - please, contact @megaplov\n\n"

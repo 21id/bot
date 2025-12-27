@@ -92,8 +92,11 @@ async def code_verification(message: Message, state: FSMContext,
 
         # Checking if user has been joining a chat, when user is validating
         if await state.get_value("is_joining_chat"):
+            # Getting chat information
             chat_id: int = int(await state.get_value("chat_id"))
             chat_title: str = await state.get_value("chat_title")
+            chat = await container.chat_service.get_by_telegram_id(chat_id)
+
             # Trying to accept and send message, otherwise - stop
             approved = False
             try:
@@ -102,6 +105,10 @@ async def code_verification(message: Message, state: FSMContext,
                 approved = True
 
                 local_text = f"👋 Dear {student.login}, welcome to '{chat_title}'!"
+
+                if chat and chat.desc_on_join:
+                    local_text += f"\n\nJoin message:\n{chat.desc_on_join}"
+
                 await message.answer(local_text)
             except Exception as e:
                 local_text = (
@@ -114,7 +121,6 @@ async def code_verification(message: Message, state: FSMContext,
 
             # If user has been approved - sending deeplink to his profile with his
             # info to chat's ID topic
-            chat = await container.chat_service.get_by_telegram_id(chat_id)
             if approved and chat.id_topic_id:
                 try:
                     local_text = (
