@@ -48,3 +48,18 @@ async def handle_join(event: ChatMemberUpdated, container: Container) -> None:
             )
         except Exception as e:
             pass
+
+    # Try to send welcome message to user
+    try:
+        text = f"👋 Dear {user.nickname}, welcome to '{chat.title}'!"
+
+        # Adding chat description
+        if chat.desc_on_join:
+            text += f"\n\nJoin message:\n{chat.desc_on_join}"
+
+        await event.bot.send_message(
+            chat_id=user.telegram_id,
+            text=text,
+        )
+    except Exception as e:
+        pass
