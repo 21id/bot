@@ -165,10 +165,19 @@ class S21APIClient:
             )
 
     @staticmethod
-    def handle_error(data: dict) -> None:
-        """Raising an exception, if ErrorResponseDTO has been returned."""
-        error = ErrorResponseDTO(**data)
-        message = f"Got an error: {error}"
+    def handle_error(data: dict, response: ClientResponse) -> None:
+        """Raising an exception, if ErrorResponseDTO or other has been returned."""
+        # Try to cast data into error response DTO, otherwise - just string data
+        try:
+            error = ErrorResponseDTO(**data)
+            error_msg = (
+                f"\nS21API Exception UUID: {error.exceptionUUID}, Status:"
+                f" {error.status}, Message: {error.message}"
+            )
+        except TypeError:
+            error_msg = str(data)
+
+        message = f"Got an error! Response code: {response.status}\nError: {error_msg}"
         raise Exception(message)
 
     # -------- AUTH --------
@@ -278,4 +287,4 @@ class S21APIClient:
 
         # And if it's not "Not found" - raising an error
         data = await response.json()
-        return self.handle_error(data)
+        return self.handle_error(data, response)
