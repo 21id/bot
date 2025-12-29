@@ -119,39 +119,8 @@ async def code_verification(message: Message, state: FSMContext,
 
                 await message.answer(local_text)
 
-            # If user has been approved - sending deeplink to his profile with his
-            # info to chat's ID topic
-            if approved and chat.id_topic_id:
-                try:
-                    local_text = (
-                        f'<a href="tg://user?id={user_tg_id}">{student.login}</a> '
-                        f'({student.className}, {student.campus.short_name})'
-                    )
-
-                    chat_info = await bot.get_chat(message.from_user.id)
-                    if not chat_info.has_private_forwards:
-                        keyboard = student_deeplink_kb.get(chat_id=message.from_user.id)
-                    else:
-                        # TODO: refactor
-                        keyboard = student_deeplink_kb.get(nickname=student.login)
-
-                    await bot.send_message(
-                        chat_id=chat.chat_id,
-                        message_thread_id=chat.id_topic_id,
-                        text=local_text,
-                        reply_markup=keyboard,
-                        parse_mode=ParseMode.HTML,
-                    )
-                except Exception as e:
-                    print("NICKNAME_SEND_ERROR", student.login, e)
-                    local_text = (
-                        f"Can't send your nickname and deeplink to '{chat_title}' ID "
-                        f"topic because of an error ({e})\n\n🔗 Students can find you "
-                        "anyway, and this would be a bit easier for them, so please - "
-                        "send your nickname to ID topic"
-                    )
-
-                    await message.reply(local_text)
+            # Message to topic ID is sent on user join
+            # from chat router (chat/join/join.py)
 
         # Trying to upsert, and if errors happen - notify user
         try:
