@@ -1,5 +1,6 @@
 from app.bootstrap import Container
 from app.bot.routers.user.registration.router import router
+from app.bot.routers.user.menu.keyboard import menu as menu_kb
 
 from aiogram.types import Message
 from aiogram.filters import CommandObject, CommandStart
@@ -27,6 +28,8 @@ async def join_invite(
         await message.reply(text)
         return
 
+    keyboard = None
+
     try:
         # Verify user
         user.telegram_id = message.from_user.id
@@ -40,10 +43,12 @@ async def join_invite(
         )
     else:
         text = (
-            f"👋 Welcome to 21ID, {user.nickname}!\n\nFirst functionality that you "
-            "may need firstly is right below, but use /start or /main for main "
-            "menu\n\n🪪 Also, you can submit an application to receive your "
-            "personal 21ID card! For that, use respective button below"
+            f"👋 Welcome to 21ID, {user.nickname}!\n\n🔽 Basic functionality that "
+            "you may need is right below, which you can access in main menu with "
+            "/start command\n\n🪪 To find other peers, please use inline mode. "
+            "Guide on how to use 21ID Bot inline search is here: t.me/ident21/9"
         )
 
-    await message.reply(text)
+        keyboard = menu_kb.get()
+
+    await message.reply(text, keyboard=keyboard)

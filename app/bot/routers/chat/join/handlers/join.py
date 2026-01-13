@@ -17,6 +17,11 @@ async def handle_join(event: ChatMemberUpdated, container: Container) -> None:
     if not chat:
         return
 
+    # If chat title isn't set in DB - using from event
+    chat_title = chat.title
+    if not chat_title:
+        chat_title = event.chat.title
+
     # Checking if user is valid 21ID user
     user_tg_id = event.new_chat_member.user.id
     user = await container.user_service.get_by_telegram_id(
@@ -35,7 +40,8 @@ async def handle_join(event: ChatMemberUpdated, container: Container) -> None:
 
             chat_info = await event.bot.get_chat(user_tg_id)
             if not chat_info.has_private_forwards:
-                keyboard = student_deeplink_kb.get(chat_id=user_tg_id)
+                keyboard = student_deeplink_kb.get(chat_id=user_tg_id,
+                                                   nickname=user.nickname)
             else:
                 keyboard = student_deeplink_kb.get(nickname=user.nickname)
 
@@ -47,11 +53,11 @@ async def handle_join(event: ChatMemberUpdated, container: Container) -> None:
                 parse_mode=ParseMode.HTML,
             )
         except Exception as e:
-            pass
+            print("ERROR SENDING ID TO TOPIC", e)
 
     # Try to send welcome message to user
     try:
-        text = f"👋 Dear {user.nickname}, welcome to '{chat.title}'!"
+        text = f"👋 Dear {user.nickname}, welcome to '{chat_title}'!"
 
         # Adding chat description
         if chat.desc_on_join:

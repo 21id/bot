@@ -23,7 +23,7 @@ async def join_request(
 
     user = await container.user_service.get_by_telegram_id(user_id)
 
-    if user:
+    if user and user.is_verified:
         chat = await container.chat_service.get_by_telegram_id(chat_id)
 
         # If user can't be accepted due to chat settings - deny his request
@@ -66,38 +66,6 @@ async def join_request(
         # Adding chat description
         if chat.desc_on_join:
             text += f"\n\nJoin message:\n{chat.desc_on_join}"
-
-        # If there is ID topic set - try to send message there
-        if chat.id_topic_id:
-            try:
-                local_text = (
-                    f'<a href="tg://user?id={user.telegram_id}">{user.nickname}</a> '
-                    f'({user.wave_name}, {user.campus.short_name})'
-                )
-
-                chat_info = await bot.get_chat(user_id)
-                if not chat_info.has_private_forwards:
-                    keyboard = student_deeplink_kb.get(chat_id=user_id)
-                else:
-                    keyboard = student_deeplink_kb.get(nickname=user.nickname)
-
-                await bot.send_message(
-                    chat_id=chat.chat_id,
-                    message_thread_id=chat.id_topic_id,
-                    text=local_text,
-                    reply_markup=keyboard,
-                    parse_mode=ParseMode.HTML,
-                )
-            except Exception as e:
-                print("NICKNAME_SEND_ERROR", user.nickname, e)
-                local_text = (
-                    f"Can't send your nickname and deeplink to '{chat_title}' ID "
-                    f"topic because of an error ({e})\n\n🔗 Students can find you "
-                    "anyway, and this would be a bit easier for them, so please - "
-                    "send your nickname to ID topic"
-                )
-
-                await bot.send_message(user_id, text=local_text)
 
         # Send welcome message
         await bot.send_message(user_id, text=text)
