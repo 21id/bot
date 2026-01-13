@@ -14,6 +14,15 @@ async def notify_user(callback: CallbackQuery, callback_data: SendNotification,
     user = await container.user_service.get_by_nickname(callback_data.nickname)
     sender = await container.user_service.get_by_telegram_id(callback.from_user.id)
 
+    # Checking if user is trying to send a notification to himself
+    if user and sender and user.telegram_id == sender.telegram_id:
+        text = (
+            f"You can't send notification to yourself, {user.nickname}!"
+        )
+
+        await callback.answer(text, show_alert=True)
+        return
+
     # If sender isn't registered
     if not sender:
         text = (
@@ -50,9 +59,11 @@ async def notify_user(callback: CallbackQuery, callback_data: SendNotification,
         text = (
             f"🚨 IMPORTANT 🚨\n\nHey, {user.nickname}!\n⚠️ {sender.nickname} "
             f"({sender.wave_name}, {sender.campus.short_name}) is looking forward to "
-            "contacting with you (may be because of Peer Review). \n\n⚠️ Please, "
+            "contacting with you (may be because of Peer Review). \nℹ️ Please, "
             "contact ASAP him via Rocket.Chat, Telegram or check School 21 Platform ("
-            "AKA Edu) for incoming Peer reviews"
+            "AKA Edu) for incoming Peer reviews\n\n⚠️ If this user is spamming you "
+            "with requests - we are sorry. Please contact @megaplov - he will try to "
+            "resolve this issue"
         )
 
         await bot.send_message(user.telegram_id, text, reply_markup=keyboard)
@@ -67,5 +78,8 @@ async def notify_user(callback: CallbackQuery, callback_data: SendNotification,
             f"⛔ {user.nickname} has blocked 21ID bot or deleted his telegram account, "
             f"can't reach him!"
         )
+
+    # TODO: REMOVE
+    print("NOTIFICATION", sender.nickname, user.nickname)
 
     await callback.answer(text, show_alert=True)

@@ -5,12 +5,12 @@ from app.bot.routers.user.search.router import router
 from app.bot.routers.user.registration.keyboards import (student_deeplink as
                                                          student_deeplink_kb)
 
-from aiogram import Bot
+from aiogram import Bot, F
 from aiogram.types import InlineQuery, InlineQueryResultArticle, \
     InputTextMessageContent, InlineKeyboardMarkup, InlineKeyboardButton
 
 
-@router.inline_query()
+@router.inline_query(F.query.len() >= 4)
 async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> None:
     """Searching user by his Platform's nickname."""
 
@@ -52,11 +52,12 @@ async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> No
                     f"\n🖥 {user.nickname} is not in campus"
                 )
 
-            # If user is verified, means he contacted the bot and bot can send links to him
+            # If user is verified, means he contacted the bot and bot can
+            # send links to him
             if user.is_verified:
                 full_description += (
-                    "\n\n✅ Because he's registered in 21ID, you can try contacting him, "
-                    "using buttons below"
+                    "\n\n✅ Because he's registered in 21ID, you can try contacting "
+                    "him, using buttons below"
                 )
             else:
                 full_description += (
