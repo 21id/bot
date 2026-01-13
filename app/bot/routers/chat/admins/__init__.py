@@ -1,7 +1,7 @@
 from .router import router
 from .handlers import (
     set_id_topic, base_create, list_settings, set_join_rules, set_join_description,
-    set_join_link, set_title, set_chat_description
+    set_join_link, set_title, set_chat_description, manual_mention
 )
 
 from aiogram import Router
