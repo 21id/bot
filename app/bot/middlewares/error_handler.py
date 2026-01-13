@@ -22,6 +22,16 @@ class ErrorMiddleware(BaseMiddleware):
             return await handler(event, data)
 
         except Exception as e:
+
+            basic_errors = [
+                # Handling old requests
+                ("Telegram server says - Bad Request: query is too old and "
+                 "response timeout expired or query ID is invalid")
+            ]
+            # Trying to see if this is an 'possible mistake'
+            if str(e) in basic_errors:
+                return None
+
             error_uuid = str(uuid.uuid4())
 
             bot: Bot = data["bot"]

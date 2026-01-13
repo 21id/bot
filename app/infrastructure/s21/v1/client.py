@@ -132,15 +132,6 @@ class S21APIClient:
             data = await response.json()
             self.handle_error(data, response)
 
-        # Return error DTO, if status differs from expected
-        if response.status != expected_status:
-            data = await response.json()
-            # Try to validate error, else - just return the plain response
-            try:
-                return ErrorResponseDTO(**data)
-            except TypeError:
-                return response
-
         return response
 
     async def get(
@@ -168,6 +159,8 @@ class S21APIClient:
     @staticmethod
     def handle_error(data: dict, response: ClientResponse) -> None:
         """Raising an exception, if ErrorResponseDTO or other has been returned."""
+        print("ERROR", data, response)
+
         # Try to cast data into error response DTO, otherwise - just string data
         try:
             error = ErrorResponseDTO(**data)
@@ -175,10 +168,24 @@ class S21APIClient:
                 f"\nS21API Exception UUID: {error.exceptionUUID}, Status:"
                 f" {error.status}, Message: {error.message}"
             )
-        except TypeError:
+        except:
             error_msg = str(data)
 
-        message = f"Got an error! Response code: {response.status}\nError: {error_msg}"
+        status = response.status
+        if status == 429:
+            message = (
+                "❗️Our service hit School 21 API limitation (429, Too Many "
+                "Requests)!\n⏳ Please, try again in about 1 minute\nWe are very sorry "
+                "for the inconvenience"
+            )
+        elif status == 500:
+            message = (
+                "❗️Error has occurred on School 21 API side. Please try again, "
+                "it may be one-time error.\n\nIf error persists - contact @megaplov"
+            )
+        else:
+            message = f"❗️Error response code: {status}\nError message: {error_msg}"
+
         raise Exception(message)
 
     # -------- AUTH --------
