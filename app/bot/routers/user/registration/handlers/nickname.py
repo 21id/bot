@@ -37,11 +37,19 @@ async def invalid_nickname(message: Message) -> None:
                        UserExists(exists=True) and UserVerified(verified=False))
 @router.message(F.text.isalpha(), StateFilter(RegistrationStates.nickname))
 async def nickname(request: Message | CallbackQuery, state: FSMContext,
-                   container: Container, bot: Bot) -> None:
+                   container: Container, bot: Bot,
+                   callback_data: StartRegistration | None = None) -> None:
     """Verification of nickname via email."""
 
     # Setting Default keyboard, which can be changed if needed
     keyboard = nickname_back_kb.get()
+
+    # If user is verifying existing account while joining a chat
+    if callback_data and callback_data.approve_join:
+        chat_id = callback_data.join_chat_id
+        chat_title = callback_data.join_chat_title
+        await state.update_data(is_joining_chat=True, chat_id=chat_id,
+                                chat_title=chat_title)
 
     # Getting current user Telegram ID
     user_tg_id = request.from_user.id
@@ -89,7 +97,8 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
         if student.status == StudentStatus.BLOCKED:
             raise Exception(
                 "21ID can't work with BLOCKED students on School 21 Platform. If you "
-                "believe this is a mistake (which could happen) - please contact @megaplov"
+                "believe this is a mistake (which could happen) - please contact "
+                "@megaplov"
             )
 
         user_id = request.from_user.id
@@ -104,8 +113,8 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
             # but anyway move further
             # Important: using student object, because user may be undefined
             acceptance_requirements = (
-                    (student.parallelName != "Core program" and chat.core_allowed) or
-                    (student.parallelName == "Core program" and chat.intensive_allowed)
+                    (student.parallelName == "Core program" and chat.core_allowed) or
+                    (student.parallelName != "Core program" and chat.intensive_allowed)
             )
 
             if not acceptance_requirements:
@@ -128,7 +137,7 @@ async def nickname(request: Message | CallbackQuery, state: FSMContext,
                 await state.update_data(is_joining_chat=False, chat_id=None,
                                         chat_title=None)
 
-                await reply_edit.answer(request, text=text)
+                await reply_edit.answer(request, text=text, answer_=True)
 
         # But anyway moving user to OTP step
         student_email = f"{nickname_}@student.21-school.ru"

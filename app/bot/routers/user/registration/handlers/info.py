@@ -15,9 +15,9 @@ async def info(callback: CallbackQuery) -> None:
         "\n- Find peers' from yours and other campuses, and notify them via Telegram "
         "and email"
         "\n- Using your School 21 account to sign in to external services)"
-        "\n\nAlso, you can issue physical 21ID Card - great merch item and ability to "
-        "auth in physical interfaces, book skype and meeting rooms and other "
-        "functionality"
+        "\n\n❓ If you want to contribute or ask questions about "
+        "development - please visit https://github.com/21id/bot\n\nMade with ❤️ from "
+        "SKD & TAS by daemonpr (@megaplov)"
     )
 
     keyboard = info_kb.get()

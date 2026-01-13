@@ -41,11 +41,8 @@ async def start(callback: CallbackQuery, state: FSMContext, callback_data:
         chat_title = callback_data.join_chat_title
         await state.update_data(is_joining_chat=True, chat_id=chat_id,
                                 chat_title=chat_title)
-    # And if he isn't joining a chat - allow keyboard
-
-    # If user is joining a chat via join request - do not give keyboard to get back
-    if await state.get_value("is_joining_chat"):
         keyboard = None
+    # If user is joining a chat via join request - do not give keyboard to get back
     else:
         keyboard = nickname_back_kb.get()
 

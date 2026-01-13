@@ -7,15 +7,13 @@ from app.bot.routers.user.registration.router import router
 from app.bot.routers.user.registration.states import RegistrationStates
 from app.bot.routers.user.registration.keyboards import (nickname_back as
                                                          nickname_back_kb)
-from app.bot.routers.user.registration.keyboards import (student_deeplink as
-                                                         student_deeplink_kb)
+from app.bot.routers.user.menu.keyboard import menu as menu_kb
 
 from aiogram import F, Bot
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
-from aiogram.methods import ApproveChatJoinRequest
-from aiogram.enums import ParseMode
+from aiogram.methods import ApproveChatJoinRequest, DeclineChatJoinRequest
 
 
 # Handling invalid OTP codes
@@ -61,6 +59,7 @@ async def code_verification(message: Message, state: FSMContext,
         user_from_db = await container.user_service.get_by_telegram_id(
             message.from_user.id)
 
+    user_tg_id = message.from_user.id
     keyboard = None
 
     # Checking if code isn't correct
@@ -68,16 +67,42 @@ async def code_verification(message: Message, state: FSMContext,
         # Checking if current attempt is 10th or more
         # Otherwise, give opportunity to try again
         if attempts_count + 1 > max_attempts:
+            text = (
+                f"Dear {student.login}, you've used all your attempts to enter OTP "
+                "code.\n\n🔄 You are required to restart your registration process "
+                "and enter nickname again with /start"
+            )
+
+            is_joining_chat = await state.get_value("is_joining_chat")
+
+            if is_joining_chat:
+                text += (
+                    "\n\n❌ Because you were joining a chat, your join request "
+                    "will be canceled, and you will need to send it again"
+                )
+
             await state.set_state(RegistrationStates.nickname)
             await state.set_data({})
 
-            text = (
-                f"Dear {student.login}, you've used a lot of attempts to enter OTP "
-                "code.\n\n🔄 On this basis, you are required to restart your "
-                "registration process and enter nickname again"
-            )
-
             keyboard = nickname_back_kb.get(set_change_bt_flag=True)
+
+            # Sending message, in case join request declining will raise an error
+            await message.reply(text, reply_markup=keyboard)
+
+            # Declining join request
+            if is_joining_chat:
+                chat_id: int = int(await state.get_value("chat_id"))
+                try:
+                    await bot(
+                        DeclineChatJoinRequest(chat_id=chat_id, user_id=user_tg_id)
+                    )
+                except Exception as e:
+                    raise Exception(
+                        f"Got an error while trying to decline join request: {e}"
+                    )
+
+            # Exiting, to exclude message duplication
+            return
         else:
             text = (
                 f"❌ Sent OTP code ({response_otp_code}) is invalid, please try again "
@@ -88,28 +113,15 @@ async def code_verification(message: Message, state: FSMContext,
             # Update attempts count
             await state.update_data(attempts_count=(attempts_count + 1))
     else:
-        user_tg_id = message.from_user.id
-
         # Checking if user has been joining a chat, when user is validating
-        if await state.get_value("is_joining_chat"):
+        is_joining_chat: bool = await state.get_value("is_joining_chat")
+        if is_joining_chat:
             # Getting chat information
             chat_id: int = int(await state.get_value("chat_id"))
-            chat_title: str = await state.get_value("chat_title")
-            chat = await container.chat_service.get_by_telegram_id(chat_id)
 
             # Trying to accept and send message, otherwise - stop
-            approved = False
             try:
                 await bot(ApproveChatJoinRequest(chat_id=chat_id, user_id=user_tg_id))
-
-                approved = True
-
-                local_text = f"👋 Dear {student.login}, welcome to '{chat_title}'!"
-
-                if chat and chat.desc_on_join:
-                    local_text += f"\n\nJoin message:\n{chat.desc_on_join}"
-
-                await message.answer(local_text)
             except Exception as e:
                 local_text = (
                     f"⚠️ Got an error, while trying to accept your join request: {e}\n"
@@ -145,10 +157,14 @@ async def code_verification(message: Message, state: FSMContext,
                 raise Exception("Error with retrieving and setting user data")
 
             try:
-                # notifying admin of new user
+                # Notifying admin of new user
                 local_text = (
                     f"NEW {user.nickname} ({user.wave_name}, {user.campus.short_name})"
                 )
+                # Adding notion that user is joining a chat when registering
+                if is_joining_chat:
+                    chat_title: str = await state.get_value("chat_title")
+                    local_text += f" && joins {chat_title}"
                 await bot.send_message(getenv("ADMIN_ID"), local_text)
             except:
                 pass
@@ -161,12 +177,13 @@ async def code_verification(message: Message, state: FSMContext,
             )
         else:
             text = (
-                f"👋 Welcome to 21ID, {student.login}!\n\nFirst functionality that you "
-                "may need firstly is right below, but use /start or /main for main "
-                "menu\n\n🪪 To find students from School 21, please use inline mode. "
-                "Guide on how to use 21ID Bot inline search is here: "
-                "https://ident21.t.me"
+                f"👋 Welcome to 21ID, {student.login}!\n\n🔽 Basic functionality that "
+                "you may need is right below, which you can access in main menu with "
+                "/start command\n\n🪪 To find other peers, please use inline mode. "
+                "Guide on how to use 21ID Bot inline search is here: t.me/ident21/9"
             )
+
+            keyboard = menu_kb.get()
 
             # Clearing state data if user has successfully join
             await state.clear()
