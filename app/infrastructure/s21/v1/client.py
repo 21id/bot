@@ -2,6 +2,7 @@ from typing import Callable
 
 from app.infrastructure.s21.v1.models.auth.credentials import Credentials
 from app.infrastructure.s21.v1.models.auth.session import Session
+from app.infrastructure.s21.v1.models.errors.client_error import S21ClientError
 from app.infrastructure.s21.v1.models.responses.error import ErrorResponseDTO
 from app.infrastructure.s21.v1.models.responses.student import ParticipantV1DTO
 
@@ -87,7 +88,7 @@ class S21APIClient:
 
     async def request(
             self, func: Callable, url: str, body: dict | None, base_url: str | None = None,
-            expected_status: int = 200, retryable: bool = True
+            retryable: bool = True
     ) -> ClientResponse | ErrorResponseDTO:
         """Middleware, to redo the request if there has been an auth problem."""
 
@@ -186,7 +187,8 @@ class S21APIClient:
         else:
             message = f"❗️Error response code: {status}\nError message: {error_msg}"
 
-        raise Exception(message)
+        raise S21ClientError(client_message=message,
+                             support_details={"data": data, "response": response})
 
     # -------- AUTH --------
 

@@ -2,10 +2,11 @@ import uuid
 import os
 from typing import Any
 
+from app.bot.utilities.data_formatting import message_split
+from app.domain.base_error import BaseError
+
 from aiogram import BaseMiddleware, Bot
 from aiogram.types import TelegramObject
-
-from app.bot.utilities.data_formatting import message_split
 
 
 class ErrorMiddleware(BaseMiddleware):
@@ -36,9 +37,17 @@ class ErrorMiddleware(BaseMiddleware):
 
             bot: Bot = data["bot"]
 
+            client_message = str(e)
+            support_data = str(e)
+            # If it's BaseError (local error type) - remap messages
+            if isinstance(e, BaseError):
+                client_message = e.message
+                support_data = e.support_details
+
             try:
                 # Sending raised error
-                for msg in message_split(text=str(e), type_="error", uuid_=error_uuid):
+                for msg in message_split(text=support_data, type_="error",
+                                         uuid_=error_uuid):
                     await bot.send_message(self.admin_id, msg)
 
                 # Sending event itself
@@ -61,8 +70,8 @@ class ErrorMiddleware(BaseMiddleware):
 
             text = (
                 "⚠️ Dear user, I got an error while trying to handle your "
-                f"request:\n{e}\n\n✍️ Please, tell us about your side of "
-                "occurred problem to @megaplov (bot administrator).\n\n"
+                f"request:\n{client_message}\n\n✍️ Please, if you have any questions "
+                f"- contact @megaplov (21ID developer).\n\n"
                 f"ERROR UUID: {error_uuid}"
             )
 
