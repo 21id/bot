@@ -1,3 +1,4 @@
+import asyncio
 from typing import Callable
 
 from app.infrastructure.s21.v1.models.auth.credentials import Credentials
@@ -5,11 +6,10 @@ from app.infrastructure.s21.v1.models.auth.session import Session
 from app.infrastructure.s21.v1.models.errors.client_error import S21ClientError
 from app.infrastructure.s21.v1.models.responses.error import ErrorResponseDTO
 from app.infrastructure.s21.v1.models.responses.student import ParticipantV1DTO
-
-from aiohttp import ClientSession, ClientResponse
-
 from app.infrastructure.s21.v1.models.responses.student_workstation import \
     ParticipantWorkstationV1DTO
+
+from aiohttp import ClientSession, ClientResponse
 
 
 class S21APIClient:
@@ -126,12 +126,21 @@ class S21APIClient:
                 response = await self.request(func, url, body, base_url=base_url,
                                               retryable=False)
             else:
-                raise Exception("Unauthorized to S21 API")
+                raise S21ClientError(
+                    client_message="Error with School 21 server authorization",
+                    support_details={"message": "Unathorized to School 21 API"}
+                )
 
         # Catching Forbidden error
         if response.status == 403:
             data = await response.json()
             self.handle_error(data, response)
+
+        # Retrying request after 500 error
+        if response.status == 500:
+            await asyncio.sleep(0.5)
+            response = await self.request(func, url, body, base_url=base_url,
+                                          retryable=False)
 
         return response
 
