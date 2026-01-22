@@ -29,7 +29,8 @@ class ErrorMiddleware(BaseMiddleware):
                 ("Telegram server says - Bad Request: query is too old and "
                  "response timeout expired or query ID is invalid")
             ]
-            # Trying to see if this is an 'possible mistake'
+            # Trying to see if this error is basic -it may be raised, even if no error
+            # has really occurred
             if str(e) in basic_errors:
                 return None
 
@@ -37,12 +38,15 @@ class ErrorMiddleware(BaseMiddleware):
 
             bot: Bot = data["bot"]
 
-            client_message = str(e)
-            support_data = str(e)
             # If it's BaseError (local error type) - remap messages
             if isinstance(e, BaseError):
-                client_message = e.message
-                support_data = e.support_details
+                client_message = e.client_message or e.message
+                support_data = e.support_details or e.message
+                notify_user = e.notify_user
+            else:
+                client_message = str(e)
+                support_data = str(e)
+                notify_user = True
 
             try:
                 # Sending raised error
@@ -68,32 +72,35 @@ class ErrorMiddleware(BaseMiddleware):
                 print(error_uuid, e2)
                 print(error_uuid, e, event, handler, data, end="\n")
 
-            text = (
-                "⚠️ Dear user, I got an error while trying to handle your "
-                f"request:\n{client_message}\n\n✍️ Please, if you have any questions "
-                f"- contact @megaplov (21ID developer).\n\n"
-                f"ERROR UUID: {error_uuid}"
-            )
+            # Checking if we should notify user
+            if notify_user:
+                text = (
+                    "⚠️ Dear user, I got an error while trying to handle your "
+                    f"request:\n{client_message}\n\n✍️ Please, if you have any questions "
+                    f"- contact @megaplov (21ID developer).\n\n"
+                    f"ERROR UUID: {error_uuid}"
+                )
 
-            # Notify the user of an error
-            user = data.get("event_from_user")
-            if user:
-                # Try sending to user personally
-                try:
-                    await bot.send_message(user.id, text)
-                    return None
-                except Exception as e2:
-                    print(error_uuid, "Send to PM failed:", e2)
+                # Notify the user of an error
+                user = data.get("event_from_user")
+                if user:
+                    # Try sending to user personally
+                    try:
+                        await bot.send_message(user.id, text)
+                        return None
+                    except Exception as e2:
+                        print(error_uuid, "Send to PM failed:", e2)
 
-            # Try sending to chat, where this action was invoked, if can't do that to
-            # user's PM
-            chat = data.get("event_chat")
-            if chat:
-                try:
-                    await bot.send_message(user.id, text)
-                    return None
-                except Exception as e2:
-                    print(error_uuid, "Send to PM failed:", e2)
+                # Try sending to chat, where this action was invoked, if can't do that to
+                # user's PM
+                chat = data.get("event_chat")
+                if chat:
+                    try:
+                        await bot.send_message(user.id, text)
+                        return None
+                    except Exception as e2:
+                        print(error_uuid, "Send to PM failed:", e2)
 
-            print(error_uuid, "Have no way to send user his error message")
+                print(error_uuid, "Have no way to send user his error message")
+
             return None
