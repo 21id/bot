@@ -87,8 +87,8 @@ class S21APIClient:
     # ------ REQUESTS ------
 
     async def request(
-            self, func: Callable, url: str, body: dict | None, base_url: str | None = None,
-            retryable: bool = True
+            self, func: Callable, url: str, body: dict | None,
+            base_url: str | None = None, retryable: bool = True
     ) -> ClientResponse | ErrorResponseDTO:
         """Middleware, to redo the request if there has been an auth problem."""
 
@@ -101,16 +101,20 @@ class S21APIClient:
         # Validation of URL
         if url is None:
             raise ValueError("url is required")
-        if not url[0] == "/":
-            url = "/" + url
 
-        url = f"{base_url}{url}"
+        # Add base URL, if url doesn't start with base_url
+        if not url.startswith(base_url):
+            if not url[0] == "/":
+                url = "/" + url
+            url = f"{base_url}{url}"
 
         headers = {
             "accept": "*/*",
             "Authorization": f"Bearer {self.session.access_token}",
         }
 
+        # Trying just the plane request and overwrite this variable if
+        # something goes wrong (40x or 50x return codes)
         response: ClientResponse = await func(url=url, data=body, headers=headers)
 
         # Catching Unauthorized error
@@ -123,6 +127,7 @@ class S21APIClient:
                     password=self.credentials.password, login=self.credentials.login,
                 )
 
+                # Retrying request with new session
                 response = await self.request(func, url, body, base_url=base_url,
                                               retryable=False)
             else:
@@ -138,9 +143,11 @@ class S21APIClient:
 
         # Retrying request after 500 error
         if response.status == 500:
+            # Waiting for 0.5 seconds before requesting again
             await asyncio.sleep(0.5)
             response = await self.request(func, url, body, base_url=base_url,
                                           retryable=False)
+            print("RETRYING 500 REQUEST", func, url, body)
 
         return response
 
@@ -209,7 +216,10 @@ class S21APIClient:
         """Using OIDC protocol to login into School 21 account, to use API."""
         # Parameters check
         if not all([auth_url, auth_realm]):
-            raise Exception("auth url and realm are required to login")
+            raise S21ClientError(
+                support_details="auth url and realm are required to login",
+                notify_user=False
+            )
 
         url = f"{auth_url}/auth/realms/{auth_realm}/protocol/openid-connect/token"
 
@@ -221,7 +231,10 @@ class S21APIClient:
             body["password"] = password
         else:
             # Raise an error if none of login (re-login) methods were provided
-            raise Exception("Either login and password are required")
+            raise S21ClientError(
+                support_details="Either login and password are required",
+                notify_user=False
+            )
 
         async with ClientSession() as session:
             response = await session.post(url=url, data=body)
@@ -231,12 +244,14 @@ class S21APIClient:
             # on OIDC, not S21 API)
             if response.status == 401:
                 # Invalid credentials
-                raise Exception(
-                    "Invalid credentials (login and password)"
+                raise S21ClientError(
+                    support_details="Invalid credentials (login and password)",
+                    notify_user=False
                 )
             elif response.status != 200:
-                raise Exception(
-                    f"Unknown error (code {response.status}): {data}"
+                raise S21ClientError(
+                    support_details=f"Unknown error (code {response.status}): {data}",
+                    notify_user=False
                 )
 
             access_token = data["access_token"]
@@ -244,8 +259,10 @@ class S21APIClient:
 
             # Checking if both access and refresh token are present in response
             if not all([access_token, refresh_token]):
-                raise Exception(
-                    "Couldn't retrieve access_token, refresh_token from response"
+                raise S21ClientError(
+                    support_details="Couldn't retrieve access_token, "
+                                    "refresh_token from response",
+                    notify_user=False
                 )
             else:
                 new_session = Session(
