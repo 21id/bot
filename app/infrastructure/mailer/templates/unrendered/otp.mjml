@@ -1,0 +1,140 @@
+<mjml>
+  <mj-head>
+    <mj-html-attributes>
+      <mj-html-attribute
+        class="easy-email"
+        attribute-name="text-color"
+        text-color="#000000"
+      />
+      <mj-html-attribute
+        class="easy-email"
+        attribute-name="font-family"
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif"
+      />
+      <mj-html-attribute class="easy-email" attribute-name="font-size" font-size="14px" />
+      <mj-html-attribute class="easy-email" attribute-name="line-height" line-height="1.7" />
+      <mj-html-attribute class="easy-email" attribute-name="font-weight" font-weight="400" />
+      <mj-html-attribute class="easy-email" attribute-name="responsive" responsive="true" />
+    </mj-html-attributes>
+
+    <mj-breakpoint width="480px" />
+
+    <mj-attributes>
+      <mj-all
+        font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif"
+      />
+      <mj-text font-size="14px" color="#000000" line-height="1.7" font-weight="400" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#F9F9F9" width="600px">
+    <mj-section padding="0">
+      <mj-column padding="0" vertical-align="top">
+        <mj-image
+          src="https://pub-29d8612f9aee48d0acf2ff66b669c708.r2.dev/21id_icon.png"
+          width="281px"
+          height="98px"
+          padding="32px 0 0 0"
+          align="center"
+        />
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="0">
+      <mj-column padding="0">
+        <mj-spacer height="20px" />
+      </mj-column>
+    </mj-section>
+
+    <mj-wrapper
+      background-color="#FFFFFF"
+      border-radius="16px"
+      padding="20px 0"
+      text-align="center"
+      direction="ltr"
+    >
+      <mj-section padding="0" text-align="left">
+        <mj-column padding="0">
+          <mj-text font-size="16px" padding="10px 25px" align="left">
+            <b>👋 Hey, {{ username }}!</b>
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0" text-align="left">
+        <mj-column padding="0">
+          <mj-text padding="10px 25px" align="left">
+            Someone has requested verification of your student account in 21ID platform.
+
+            <br /><br />
+            Please, proceed with OTP code below in 21ID Telegram bot:
+          </mj-text>
+          <mj-text
+            align="center"
+            font-size="24px"
+            font-weight="bold"
+            color="#4F5660"
+            padding="0"
+          >
+            {{ code }}
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0" text-align="left">
+        <mj-column padding="0">
+          <mj-text padding="10px 25px" align="left">
+            Do not give this OTP to anyone and use it only yourself!
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0" text-align="left">
+        <mj-column padding="0">
+          <mj-text padding="10px 25px" align="left">
+            If you didn't request this OTP - just ignore this email.
+          </mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0" text-align="left">
+        <mj-column padding="0">
+          <mj-divider border-width="1px" border-style="solid" border-color="#C9CCCF" padding="10px 0" />
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0" text-align="left">
+        <mj-column padding="0">
+          <mj-button
+            href="https://t.me/ident21"
+            background-color="#FFFFFF"
+            color="#4a90e2"
+            font-weight="bold"
+            border-radius="3px"
+            font-size="16px"
+            padding="10px 25px"
+            inner-padding="10px 25px"
+            target="_blank"
+            align="center"
+          >
+            Our Telegram
+          </mj-button>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0" text-align="left">
+        <mj-column padding="0">
+          <mj-text padding="10px 25px" align="center">
+            with ❤️ from School 21 Uzbekistan
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+
+    <mj-section padding="0">
+      <mj-column padding="0">
+        <mj-spacer height="64px" />
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

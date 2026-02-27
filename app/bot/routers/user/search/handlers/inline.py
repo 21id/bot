@@ -1,0 +1,211 @@
+from app.bootstrap import Container
+from app.infrastructure.s21.v1.models.responses.student import ParticipantV1DTO
+from app.bot.routers.user.invite.callback import InviteStudent
+from app.bot.routers.user.search.router import router
+from app.bot.routers.user.registration.keyboards import (student_deeplink as
+                                                         student_deeplink_kb)
+
+from aiogram import Bot, F
+from aiogram.types import InlineQuery, InlineQueryResultArticle, \
+    InputTextMessageContent, InlineKeyboardMarkup, InlineKeyboardButton
+
+
+@router.inline_query(F.query.len() >= 4)
+async def inline_query(query: InlineQuery, container: Container, bot: Bot) -> None:
+    """Searching user by his Platform's nickname."""
+
+    # Getting user who invoked inline mode. If there is no user - provide minimal info
+    invoke_user = await container.user_service.get_by_telegram_id(query.from_user.id)
+
+    # Getting every student that contains nickname
+    partial_nickname = query.query
+    if not partial_nickname:
+        return
+
+    users = container.user_service.search_by_nickname(partial_nickname)
+
+    results = []
+    async for user in users:
+        title = f"👤 {user.nickname}: 21ID 🪪"
+
+        short_description = (
+            f"Student at {user.campus.short_name}, wave {user.wave_name}"
+        )
+
+        full_description = (
+            f"👤 {user.nickname} is a student at {user.campus.short_name}, "
+            f"wave {user.wave_name}"
+        )
+
+        # Give student info if user is registered
+        if invoke_user:
+            # Notifying that user is logged in the AWP
+            workplace = await container.s21api_client.get_student_workplace_by_nickname(
+                user.nickname)
+            if workplace:
+                full_description += (
+                    f"\n🖥 {user.nickname} is currently logged in cluster"
+                    f" {workplace.clusterName} on {workplace.row}.{workplace.number}"
+                )
+            else:
+                full_description += (
+                    f"\n🖥 {user.nickname} is not in campus"
+                )
+
+            # If user is verified, means he contacted the bot and bot can
+            # send links to him
+            if user.is_verified:
+                full_description += (
+                    "\n\n✅ Because he's registered in 21ID, you can try contacting "
+                    "him, using buttons below"
+                )
+            else:
+                full_description += (
+                    "\n\n⚠️ This user isn't verified, but you can try contacting him, "
+                    "using buttons below"
+                )
+
+            # Checking if there is Telegram userid associated with user
+            if user.telegram_id and user.is_verified:
+                # If it is - create contact keyboard
+                chat_info = await bot.get_chat(user.telegram_id)
+                if not chat_info.has_private_forwards:
+                    keyboard = student_deeplink_kb.get(chat_id=user.telegram_id,
+                                                       nickname=user.nickname)
+                else:
+                    keyboard = student_deeplink_kb.get(nickname=user.nickname)
+            else:
+                keyboard = InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        InlineKeyboardButton(
+                            text="❌ Can't find his Telegram",
+                            callback_data="none",
+                        )
+                    ]]
+                )
+        # If user isn't registered in 21ID - providing minimal info
+        else:
+            full_description += (
+                f"\n\n🪪 Register in 21ID to get more information about student!"
+            )
+
+            bot_url = f"https://t.me/{(await query.bot.get_me()).username}"
+
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[[
+                    InlineKeyboardButton(
+                        text="🪪 Register for free (3 mins)",
+                        url=bot_url,
+                    )
+                ]]
+            )
+
+        results.append(InlineQueryResultArticle(
+            id=user.nickname,
+            title=title,
+            description=short_description,
+            input_message_content=InputTextMessageContent(
+                message_text=full_description
+            ),
+            reply_markup=keyboard
+        ))
+
+    if len(results) == 0:
+        student = await container.s21api_client.get_student_by_nickname(
+            partial_nickname)
+
+        # If this nickname really belongs to a student - offer user to invite
+        # him to 21ID
+        if not isinstance(student, ParticipantV1DTO):
+            short_description = f"Can't find student by nickname '{partial_nickname}'"
+
+            full_description = (
+                f"Nickname '{partial_nickname}' (even if it's partial) doesn't belong "
+                "to any student or 21ID user"
+            )
+
+            results = [
+                InlineQueryResultArticle(
+                    id="none",
+                    title="Not found!",
+                    description=short_description,
+                    input_message_content=InputTextMessageContent(
+                        message_text=full_description
+                    )
+                )
+            ]
+
+        else:
+            title = f"🎓 {student.login}"
+
+            short_description = (
+                f"Student at {student.campus.short_name}, wave {student.className}"
+            )
+
+            full_description = (
+                f"🎓 {student.login} is a student at {student.campus.short_name}, "
+                f"wave {student.className}"
+            )
+
+            if invoke_user:
+                # Notifying that user is logged in the AWP
+                workplace = await container.s21api_client.get_student_workplace_by_nickname(
+                    student.login)
+                if workplace:
+                    full_description += (
+                        f"\n🖥 {student.login} is currently logged in "
+                        f"cluster {workplace.clusterName} on {workplace.row}"
+                        f".{workplace.number}"
+                    )
+                else:
+                    full_description += (
+                        f"\n🖥 {student.login} not in campus"
+                    )
+
+                full_description += (
+                    "\n\n❌ Because he isn't registered in 21ID, you can't contact him "
+                    "right away.\n\n🪪 But you are more than welcome to invite him to 21ID "
+                    "by using the button below - we would send him a notification that "
+                    "you're looking for him"
+                )
+
+                keyboard = InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        InlineKeyboardButton(
+                            text=f"🪪 Invite {student.login} to 21ID",
+                            callback_data=InviteStudent(
+                                invited_login=student.login,
+                            ).pack(),
+                        )
+                    ]]
+                )
+            else:
+                full_description += (
+                    f"\n\n🪪 Register in 21ID to get more information about student!"
+                )
+
+                bot_url = f"https://t.me/{(await query.bot.get_me()).username}"
+
+                keyboard = InlineKeyboardMarkup(
+                    inline_keyboard=[[
+                        InlineKeyboardButton(
+                            text="🪪 Register for free (3 mins)",
+                            url=bot_url,
+                        )
+                    ]]
+                )
+
+            results = [
+                InlineQueryResultArticle(
+                    id=student.login,
+                    title=title,
+                    description=short_description,
+                    input_message_content=InputTextMessageContent(
+                        message_text=full_description
+                    ),
+                    reply_markup=keyboard
+                )
+            ]
+
+    # Setting is_personal and cache_time so Telegram servers do not cache results
+    await query.answer(results, is_personal=True, cache_time=0)
