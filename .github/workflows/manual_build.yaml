@@ -2,6 +2,11 @@ name: (MANUAL) Building Docker image for Development purposes
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Choose tag to build for'
+        required: true
+        default: latest-rc
 
 jobs:
   build-push:
@@ -26,4 +31,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/21id/bot:latest-dev
+          tags: ghcr.io/21id/bot:${{ github.event.inputs.tag }}

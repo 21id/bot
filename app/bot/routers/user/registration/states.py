@@ -6,3 +6,4 @@ class RegistrationStates(StatesGroup):
     nickname = State()
     verification = State()
     welcome = State()
+    migration_otp = State()

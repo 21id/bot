@@ -1,4 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 from app.domain.chat.service import ChatService
 from app.infrastructure.mongodb.client import MongoClient
@@ -21,6 +22,7 @@ class Container:
     s21api_client: S21APIClient
     mail_client: MailerClient
     redis: Redis
+    i18n_core: Any = field(default=None)
 
 async def bootstrap(
     *,

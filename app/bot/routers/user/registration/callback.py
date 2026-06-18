@@ -19,3 +19,7 @@ class StartRegistration(CallbackData, prefix="welcome_reg_start"):
 class ChangeNickname(CallbackData, prefix="welcome_reg_change_nickname"):
     """CallbackData object for changing nickname."""
     pass
+
+class SendMigrationOtpEmail(CallbackData, prefix="migration_otp_email"):
+    """CallbackData object for sending migration OTP via email."""
+    pass

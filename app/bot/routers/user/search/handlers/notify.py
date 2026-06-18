@@ -3,49 +3,34 @@ from app.bot.routers.user.search.callback import SendNotification
 from app.bot.routers.user.search.router import router
 from app.bot.routers.user.registration.keyboards import (student_deeplink as
                                                          student_deeplink_kb)
+from app.i18n.core import I18nContext
 
 from aiogram import Bot
 from aiogram.types import CallbackQuery
 
 
 @router.callback_query(SendNotification.filter())
-async def notify_user(callback: CallbackQuery, callback_data: SendNotification,
-                      container: Container, bot: Bot) -> None:
+async def notify_user(
+    callback: CallbackQuery, callback_data: SendNotification,
+    container: Container, bot: Bot, i18n: I18nContext,
+) -> None:
     user = await container.user_service.get_by_nickname(callback_data.nickname)
     sender = await container.user_service.get_by_telegram_id(callback.from_user.id)
 
-    # Checking if user is trying to send a notification to himself
     if user and sender and user.telegram_id == sender.telegram_id:
-        text = (
-            f"You can't send notification to yourself, {user.nickname}!"
-        )
-
-        await callback.answer(text, show_alert=True)
+        await callback.answer(i18n.get("notify-self", nickname=user.nickname), show_alert=True)
         return
 
-    # If sender isn't registered
     if not sender:
-        text = (
-            "For privacy and security of our users, 21ID allows notification only for "
-            "registered users\n\n🪪 So you should register in 21ID first, "
-            "it takes less than 3 minutes"
-        )
-
-        await callback.answer(text, show_alert=True)
+        await callback.answer(i18n.get("notify-not-registered"), show_alert=True)
         return
 
-    # If user isn't found (edge case for old links)
     if not user:
-        text = "You're trying to notify not found user!\n\nPlease try again from start"
-
-        await callback.answer(text, show_alert=True)
+        await callback.answer(i18n.get("notify-target-not-found"), show_alert=True)
         return
 
-    # If user is in database, but has no Telegram ID (invited or imported)
     if not user.telegram_id:
-        text = "User has no Telegram ID\n\nPlease try again from start"
-
-        await callback.answer(text, show_alert=True)
+        await callback.answer(i18n.get("notify-no-telegram"), show_alert=True)
         return
 
     chat_info = await bot.get_chat(callback.from_user.id)
@@ -56,28 +41,17 @@ async def notify_user(callback: CallbackQuery, callback_data: SendNotification,
                                            nickname=user.nickname)
 
     try:
-        text = (
-            f"🚨 IMPORTANT 🚨\n\nHey, {user.nickname}!\n⚠️ {sender.nickname} "
-            f"({sender.wave_name}, {sender.campus.short_name}) is looking forward to "
-            "contacting with you (may be because of Peer Review). \nℹ️ Please, "
-            "contact ASAP him via Rocket.Chat, Telegram or check School 21 Platform ("
-            "AKA Edu) for incoming Peer reviews\n\n⚠️ If this user is spamming you "
-            "with requests - we are sorry. Please contact @megaplov - he will try to "
-            "resolve this issue"
+        notify_text = i18n.get(
+            "notify-message",
+            nickname=user.nickname,
+            sender=sender.nickname,
+            wave=sender.wave_name,
+            campus=sender.campus.short_name,
         )
-
-        await bot.send_message(user.telegram_id, text, reply_markup=keyboard)
-
-        text = (
-            f"Successfully sent a notification to {user.nickname}!\n⚠️He can see "
-            f"your nickname and contact info"
-
-        )
+        await bot.send_message(user.telegram_id, notify_text, reply_markup=keyboard)
+        text = i18n.get("notify-success", nickname=user.nickname)
     except:
-        text = (
-            f"⛔ {user.nickname} has blocked 21ID bot or deleted his telegram account, "
-            f"can't reach him!"
-        )
+        text = i18n.get("notify-blocked", nickname=user.nickname)
 
     # TODO: REMOVE
     print("NOTIFICATION", sender.nickname, user.nickname)

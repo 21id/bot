@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import AsyncGenerator
 
 from app.domain.user.user import User
@@ -95,3 +95,67 @@ class UserService:
         # Return update status
         if not result.acknowledged:
             raise Exception("Could not verify user in database")
+
+    async def set_migration_attempt(
+            self, user_id: str, new_telegram_id: int, otp: str
+    ) -> None:
+        """Save migration OTP attempt for new_telegram_id trying to claim this account."""
+        expires_at = (datetime.now() + timedelta(minutes=15)).isoformat()
+        await self.repo.update(
+            user_id,
+            {"$set": {f"migration_attempts.{new_telegram_id}": {
+                "otp": otp,
+                "attempts_count": 3,
+                "expires_at": expires_at,
+            }}}
+        )
+
+    async def get_migration_attempt(
+            self, nickname: str, new_telegram_id: int
+    ) -> dict | None:
+        """Get migration attempt data for a given new Telegram ID, or None if expired."""
+        document = await self.repo.get_by_nickname(nickname)
+        if not document:
+            return None
+        migration_attempts = document.get("migration_attempts") or {}
+        attempt = migration_attempts.get(str(new_telegram_id))
+        if not attempt:
+            return None
+        expires_at = attempt.get("expires_at")
+        if expires_at and datetime.fromisoformat(expires_at) < datetime.now():
+            return None
+        return attempt
+
+    async def decrement_migration_attempt(
+            self, user_id: str, new_telegram_id: int
+    ) -> None:
+        """Decrement the attempts counter for a migration attempt."""
+        await self.repo.update(
+            user_id,
+            {"$inc": {f"migration_attempts.{new_telegram_id}.attempts_count": -1}}
+        )
+
+    async def clear_migration_attempt(
+            self, user_id: str, new_telegram_id: int
+    ) -> None:
+        """Remove a migration attempt entry."""
+        await self.repo.update(
+            user_id,
+            {"$unset": {f"migration_attempts.{new_telegram_id}": ""}}
+        )
+
+    async def set_language(self, user_id: str, language: str) -> None:
+        """Persist the user's chosen locale to the database."""
+        await self.repo.update(user_id, {"$set": {"language": language}})
+
+    async def migrate_telegram_id(
+            self, user_id: str, new_telegram_id: int
+    ) -> None:
+        """Migrate 21ID account to a new Telegram ID and clear migration data."""
+        await self.repo.update(
+            user_id,
+            {
+                "$set": {"telegram_id": new_telegram_id, "is_verified": True},
+                "$unset": {f"migration_attempts.{new_telegram_id}": ""}
+            }
+        )

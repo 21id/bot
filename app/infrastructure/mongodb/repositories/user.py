@@ -1,3 +1,4 @@
+import re
 from typing import Any
 from bson import ObjectId
 
@@ -34,7 +35,7 @@ class UserRepository:
     def search_by_nickname(self, partial_nickname: str) -> AsyncIOMotorCursor[dict]:
         """Searching user by his Platform's nickname."""
         return self.collection.find(
-            {"nickname": {"$regex": partial_nickname, "$options": "i"}}
+            {"nickname": {"$regex": re.escape(partial_nickname), "$options": "i"}}
         )
 
     async def upsert_by_uuid(

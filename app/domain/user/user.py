@@ -40,6 +40,8 @@ class User(BaseModel_):
 
     # Invite one-time-code
     invite_otp: Annotated[str | None, OmitIfNone()] = None
+    migration_attempts: Annotated[dict | None, OmitIfNone()] = None
+    language: Annotated[str | None, OmitIfNone()] = None
 
     created_at: datetime = Field(default=datetime.now())
     verified_at: datetime = Field(default=datetime.now())
