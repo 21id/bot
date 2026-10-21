@@ -41,7 +41,7 @@ jobs:
 
       - name: Scan image with Trivy
         # Fails the build on any fixable CRITICAL vulnerability
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: ghcr.io/21id/bot:${{ github.event.inputs.tag }}
           severity: CRITICAL
