@@ -18,7 +18,9 @@ ENV PATH=/opt/venv/bin:$PATH
 RUN pip install "pip @ https://files.pythonhosted.org/packages/3f/06/3e4420302363fbb71be3c7f35ce042f54bfca330e3e66b3a2e3c4cca579f/pip-26.2.2-py3-none-any.whl#sha256=fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70"
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt \
+ && pip uninstall -y pip
+# ^ pip isn't needed at runtime, and its vendored deps (bom.cdx.json) get flagged
 
 FROM --platform=linux/amd64 python:3.14-slim AS run-image
 
@@ -30,6 +32,12 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update \
  && apt-get install -y --no-install-recommends --only-upgrade ca-certificates \
  && rm -rf /var/lib/apt/lists/*
+
+# Base image's system pip isn't used at runtime (app runs from /opt/venv), and it
+# vendors an old certifi (listed in its bom.cdx.json SBOM) - removing it entirely
+RUN rm -rf /usr/local/lib/python3.14/site-packages/pip \
+    /usr/local/lib/python3.14/site-packages/pip-*.dist-info \
+    /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.14
 
 # Unprivileged user; uid is fixed so volume/k8s securityContext can rely on it
 RUN groupadd --system --gid 10001 app \
