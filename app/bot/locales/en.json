@@ -125,5 +125,16 @@
   "btn-select-account": "Select account",
   "btn-cant-find-telegram": "❌ Can't find their Telegram",
   "btn-register-free": "🪪 Register for free (3 min)",
-  "btn-invite": "🪪 Invite {nickname} to 21ID"
+  "btn-invite": "🪪 Invite {nickname} to 21ID",
+  "mass-invite-start": "🪪 Mass-invite link\n\n1. Send School 21 nicknames separated by commas. You can send several messages.\n2. Press ✅ Done to get the link.\n\n⚠️ For example: daemonpr, kristana, lilliank",
+  "mass-invite-collected": "✅ Added: {added}\n❌ Invalid: {invalid}\n🪪 Total: {total}\n\nSend more nicknames or press ✅ Done.",
+  "mass-invite-empty": "⚠️ The list is empty. Send at least one nickname first.",
+  "mass-invite-created": "✅ Link created for {count} students. It works for 30 days.\n\n{url}",
+  "mass-invite-btn-done": "✅ Done",
+  "mass-invite-btn-cancel": "❌ Cancel",
+  "mass-invite-not-found": "❌ This invite link has expired or doesn't exist.\n\n✍️ Contact @megaplov and briefly describe the problem.",
+  "mass-invite-prompt": "👋 Welcome to 21ID!\n\n1. Send only your School 21 nickname: the login you use on the Platform.\n2. Without @ and without the email part.\n\n✅ daemonpr\n❌ daemonpr@student.21-school.ru\n❌ @daemonpr\n❌ Ivan Petrov",
+  "mass-invite-invalid": "⚠️ This doesn't look like a nickname. Send only Latin letters, up to 8 characters.\n\n✅ daemonpr\n❌ daemonpr@student.21-school.ru\n❌ @daemonpr\n❌ Ivan Petrov",
+  "mass-invite-failed": "❌ Couldn't verify {nickname} with this link.\n\n✍️ Contact @megaplov. Send your nickname ({nickname}) and briefly describe the problem.",
+  "mass-invite-success": "👋 Welcome to 21ID, {nickname}! Your account is verified.\n\n🔽 The main features are below. You can open the main menu any time with /start."
 }

@@ -2,10 +2,12 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 from app.bootstrap import Container
+from app.domain.mass_invite.service import MassInviteService
 from app.domain.user.service import UserService
 from app.domain.verification.service import VerificationService
 from app.infrastructure.mongodb import migrations
 from app.infrastructure.mongodb.client import MongoClient
+from app.infrastructure.mongodb.repositories.mass_invite import MassInviteRepository
 from app.infrastructure.mongodb.repositories.user import UserRepository
 from app.infrastructure.verification.email_otp import (
     EmailOtpProvider,
@@ -107,6 +109,9 @@ def container(
         user_service=user_service,
         chat_service=MagicMock(),
         verification_service=verification_service,
+        mass_invite_service=MassInviteService(
+            repo=MassInviteRepository(client=migrated_mongo)
+        ),
         s21api_client=AsyncMock(),
         mail_client=mailer,
         redis=redis,

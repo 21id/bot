@@ -71,6 +71,11 @@ Feature folder pattern under `routers/`: `router.py` (+ `register_filters()`),
 - **Invite**: inline search finds an unregistered S21 student → invite e-mail with a
   deeplink OTP (expires in 7 days). Invited-but-unregistered users are treated as
   **non-existent** in search, mentions and notifications.
+- **Mass-invite** (*temporary*, isolated in `routers/user/mass_invite/`,
+  `domain/mass_invite/`, `mass_invite` collection): owner (`ADMIN_ID`) sends
+  `/mass_invite` + nicknames → link `t.me/<bot>?start=mi_<token>` (30 days). Student
+  sends his nickname (5 tries/hour); if it's in the list and free → verified without
+  OTP (`VerificationMethod.MASS_INVITE`), otherwise asked to contact @megaplov.
 - **Errors**: `ErrorMiddleware` catches everything; users only ever see
   `BaseError.client_message` or a generic text plus the error UUID.
 

@@ -125,5 +125,16 @@
   "btn-select-account": "Выбрать аккаунт",
   "btn-cant-find-telegram": "❌ Не могу найти его Telegram",
   "btn-register-free": "🪪 Зарегистрироваться бесплатно (3 мин)",
-  "btn-invite": "🪪 Пригласить {nickname} в 21ID"
+  "btn-invite": "🪪 Пригласить {nickname} в 21ID",
+  "mass-invite-start": "🪪 Массовая ссылка-приглашение\n\n1. Отправьте никнеймы School 21 через запятую. Можно несколькими сообщениями.\n2. Нажмите ✅ Готово, чтобы получить ссылку.\n\n⚠️ Например: daemonpr, kristana, lilliank",
+  "mass-invite-collected": "✅ Добавлено: {added}\n❌ Некорректные: {invalid}\n🪪 Всего: {total}\n\nОтправьте ещё никнеймы или нажмите ✅ Готово.",
+  "mass-invite-empty": "⚠️ Список пуст. Сначала отправьте хотя бы один никнейм.",
+  "mass-invite-created": "✅ Ссылка создана для {count} студентов. Она действует 30 дней.\n\n{url}",
+  "mass-invite-btn-done": "✅ Готово",
+  "mass-invite-btn-cancel": "❌ Отмена",
+  "mass-invite-not-found": "❌ Эта ссылка-приглашение истекла или не существует.\n\n✍️ Напишите @megaplov и коротко опишите проблему.",
+  "mass-invite-prompt": "👋 Добро пожаловать в 21ID!\n\n1. Отправьте только ваш никнейм School 21: логин, с которым вы входите на Платформу.\n2. Без @ и без части с почтой.\n\n✅ daemonpr\n❌ daemonpr@student.21-school.ru\n❌ @daemonpr\n❌ Иван Петров",
+  "mass-invite-invalid": "⚠️ Это не похоже на никнейм. Отправьте только латинские буквы, не более 8 символов.\n\n✅ daemonpr\n❌ daemonpr@student.21-school.ru\n❌ @daemonpr\n❌ Иван Петров",
+  "mass-invite-failed": "❌ Не удалось подтвердить {nickname} по этой ссылке.\n\n✍️ Напишите @megaplov. Отправьте ваш никнейм ({nickname}) и коротко опишите проблему.",
+  "mass-invite-success": "👋 Добро пожаловать в 21ID, {nickname}! Ваш аккаунт подтверждён.\n\n🔽 Основные функции ниже. Главное меню всегда доступно по команде /start."
 }

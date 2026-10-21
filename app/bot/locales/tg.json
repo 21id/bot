@@ -125,5 +125,16 @@
   "btn-select-account": "Интихоби аккаунт",
   "btn-cant-find-telegram": "❌ Telegram-и ӯро ёфта наметавонам",
   "btn-register-free": "🪪 Ройгон ба қайд гирифтан (3 дақиқа)",
-  "btn-invite": "🪪 Даъват кардани {nickname} ба 21ID"
+  "btn-invite": "🪪 Даъват кардани {nickname} ба 21ID",
+  "mass-invite-start": "🪪 Истиноди даъвати оммавӣ\n\n1. Ному лақабҳои School 21-ро бо вергул ҷудо карда фиристед. Метавонед якчанд паём фиристед.\n2. Барои гирифтани истинод ✅ Тайёр-ро пахш кунед.\n\n⚠️ Масалан: daemonpr, kristana, lilliank",
+  "mass-invite-collected": "✅ Илова шуд: {added}\n❌ Нодуруст: {invalid}\n🪪 Ҳамагӣ: {total}\n\nБоз ному лақаб фиристед ё ✅ Тайёр-ро пахш кунед.",
+  "mass-invite-empty": "⚠️ Рӯйхат холӣ аст. Аввал ақаллан як ному лақаб фиристед.",
+  "mass-invite-created": "✅ Истинод барои {count} донишҷӯ сохта шуд. Он 30 рӯз амал мекунад.\n\n{url}",
+  "mass-invite-btn-done": "✅ Тайёр",
+  "mass-invite-btn-cancel": "❌ Бекор кардан",
+  "mass-invite-not-found": "❌ Мӯҳлати ин истиноди даъват гузаштааст ё он вуҷуд надорад.\n\n✍️ Ба @megaplov нависед ва мушкилро кӯтоҳ шарҳ диҳед.",
+  "mass-invite-prompt": "👋 Хуш омадед ба 21ID!\n\n1. Танҳо ному лақаби School 21-и худро фиристед: логине, ки бо он ба Платформа ворид мешавед.\n2. Бе @ ва бе қисми почта.\n\n✅ daemonpr\n❌ daemonpr@student.21-school.ru\n❌ @daemonpr\n❌ Ivan Petrov",
+  "mass-invite-invalid": "⚠️ Ин ба ному лақаб монанд нест. Танҳо ҳарфҳои лотинӣ фиристед, то 8 аломат.\n\n✅ daemonpr\n❌ daemonpr@student.21-school.ru\n❌ @daemonpr\n❌ Ivan Petrov",
+  "mass-invite-failed": "❌ {nickname}-ро бо ин истинод тасдиқ кардан нашуд.\n\n✍️ Ба @megaplov нависед. Ному лақаби худро ({nickname}) фиристед ва мушкилро кӯтоҳ шарҳ диҳед.",
+  "mass-invite-success": "👋 Хуш омадед ба 21ID, {nickname}! Аккаунти шумо тасдиқ шуд.\n\n🔽 Имкониятҳои асосӣ дар поён ҷойгиранд. Менюи асосиро бо фармони /start ҳар вақт кушода метавонед."
 }

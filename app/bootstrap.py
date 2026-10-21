@@ -2,9 +2,11 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from app.domain.chat.service import ChatService
+from app.domain.mass_invite.service import MassInviteService
 from app.infrastructure.mongodb import migrations
 from app.infrastructure.mongodb.client import MongoClient
 from app.infrastructure.mongodb.repositories.chat import ChatRepository
+from app.infrastructure.mongodb.repositories.mass_invite import MassInviteRepository
 from app.infrastructure.mailer.client import MailerClient
 from app.infrastructure.mailer.renderer import TemplateRenderer
 from app.infrastructure.s21.v1.models.auth.credentials import Credentials
@@ -27,6 +29,7 @@ class Container:
     user_service: UserService
     chat_service: ChatService
     verification_service: VerificationService
+    mass_invite_service: MassInviteService
     s21api_client: S21APIClient
     mail_client: MailerClient
     redis: Redis
@@ -95,10 +98,12 @@ async def bootstrap(
     # - - - Repositories - - -
     user_repo = UserRepository(client=mongo)
     chat_repo = ChatRepository(client=mongo)
+    mass_invite_repo = MassInviteRepository(client=mongo)
 
     # - - - - Services - - - -
     user_service = UserService(repo=user_repo)
     chat_service = ChatService(repo=chat_repo)
+    mass_invite_service = MassInviteService(repo=mass_invite_repo)
     verification_service = VerificationService(
         providers=[EmailOtpProvider(mail_client=mailer), MigrationOtpProvider()],
         redis=redis,
@@ -109,6 +114,7 @@ async def bootstrap(
         user_service=user_service,
         chat_service=chat_service,
         verification_service=verification_service,
+        mass_invite_service=mass_invite_service,
         s21api_client=s21api_client,
         mail_client=mailer,
         redis=redis,

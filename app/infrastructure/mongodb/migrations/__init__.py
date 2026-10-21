@@ -5,6 +5,7 @@ from app.infrastructure.mongodb.migrations import (
     m001_indexes,
     m002_expirations,
     m003_verifications,
+    m004_mass_invite,
 )
 
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -14,6 +15,7 @@ MIGRATIONS: list[tuple[str, Callable[[AsyncIOMotorDatabase], Awaitable[None]]]] 
     ("001_indexes", m001_indexes.migrate),
     ("002_expirations", m002_expirations.migrate),
     ("003_verifications", m003_verifications.migrate),
+    ("004_mass_invite", m004_mass_invite.migrate),
 ]
 
 

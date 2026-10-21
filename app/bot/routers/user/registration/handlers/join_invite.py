@@ -6,11 +6,12 @@ from app.bot.routers.user.registration.router import router
 from app.bot.routers.user.menu.keyboard import menu as menu_kb
 from app.bot.i18n.core import I18nContext
 
+from aiogram import F
 from aiogram.types import Message
 from aiogram.filters import CommandObject, CommandStart
 
 
-@router.message(CommandStart(deep_link=True))
+@router.message(CommandStart(deep_link=True, magic=~F.args.startswith("mi_")))
 async def join_invite(
     message: Message, command: CommandObject, container: Container, i18n: I18nContext
 ) -> None:

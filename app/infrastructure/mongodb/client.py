@@ -24,3 +24,7 @@ class MongoClient:
     def chat(self) -> AsyncIOMotorCollection:
         """Return chats collection from database."""
         return self.db["chat"]
+
+    def mass_invite(self) -> AsyncIOMotorCollection:
+        """Return mass-invite links collection from database."""
+        return self.db["mass_invite"]

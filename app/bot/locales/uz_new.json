@@ -108,5 +108,16 @@
   "btn-select-account": "Akkauntni tanlaş",
   "btn-cant-find-telegram": "❌ Uning Telegram akkauntini topa olmayapman",
   "btn-register-free": "🪪 Bepul röyxatdan ötiş (3 daqiqa)",
-  "btn-invite": "🪪 {nickname} ni 21ID ga taklif qiliş"
+  "btn-invite": "🪪 {nickname} ni 21ID ga taklif qiliş",
+  "mass-invite-start": "🪪 Ommaviy taklif havolasi\n\n1. School 21 nikneymlarini vergul bilan ajratib yuboring. Bir neçta xabar yuborişingiz mumkin.\n2. Havolani oliş uçun ✅ Tayyor tugmasini bosing.\n\n⚠️ Masalan: daemonpr, kristana, lilliank",
+  "mass-invite-collected": "✅ Qöşildi: {added}\n❌ Notöğri: {invalid}\n🪪 Jami: {total}\n\nYana nikneym yuboring yoki ✅ Tayyor tugmasini bosing.",
+  "mass-invite-empty": "⚠️ Röyxat böş. Avval kamida bitta nikneym yuboring.",
+  "mass-invite-created": "✅ Havola {count} ta talaba uçun yaratildi. U 30 kun işlaydi.\n\n{url}",
+  "mass-invite-btn-done": "✅ Tayyor",
+  "mass-invite-btn-cancel": "❌ Bekor qiliş",
+  "mass-invite-not-found": "❌ Bu taklif havolasining muddati ötgan yoki u mavjud emas.\n\n✍️ @megaplov bilan boğlaning va muammoni qisqaça yozing.",
+  "mass-invite-prompt": "👋 21ID ga xuş kelibsiz!\n\n1. Faqat School 21 nikneymingizni yuboring: Platformaga kiradigan loginingiz.\n2. @ belgisisiz va poçta qismisiz.\n\n✅ daemonpr\n❌ daemonpr@student.21-school.ru\n❌ @daemonpr\n❌ Ivan Petrov",
+  "mass-invite-invalid": "⚠️ Bu nikneymga öxşamaydi. Faqat lotin harflarini yuboring, 8 ta belgigaça.\n\n✅ daemonpr\n❌ daemonpr@student.21-school.ru\n❌ @daemonpr\n❌ Ivan Petrov",
+  "mass-invite-failed": "❌ {nickname} ni bu havola orqali tasdiqlab bölmadi.\n\n✍️ @megaplov bilan boğlaning. Nikneymingizni ({nickname}) yuboring va muammoni qisqaça yozing.",
+  "mass-invite-success": "👋 21ID ga xuş kelibsiz, {nickname}! Akkauntingiz tasdiqlandi.\n\n🔽 Asosiy imkoniyatlar quyida. Asosiy menyuni istalgan vaqtda /start buyruği bilan oçişingiz mumkin."
 }

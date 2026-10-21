@@ -13,9 +13,12 @@ def register_sub_routers() -> Router:
         menu,
         migration,
         language,
+        mass_invite,
     )
 
     routers = [
+        # Temporary: before registration, so mi_ deeplinks and states win
+        mass_invite.register_filters(),
         approve_join.router,
         registration.router.register_filters(),
         menu.router.register_filters(),
