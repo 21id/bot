@@ -2,6 +2,7 @@ from .router import router
 from .handlers import join
 
 from aiogram import Router
+from aiogram.filters import and_f
 
 
 def register_filters() -> Router:
@@ -10,7 +11,7 @@ def register_filters() -> Router:
     from app.bot.filters.user_verified import UserVerified
 
     # Applying filters to check if user is registered and verified
-    is_user = UserExists(exists=True) and UserVerified(verified=True)
+    is_user = and_f(UserExists(exists=True), UserVerified(verified=True))
 
     router.message.filter(is_user)
     router.callback_query.filter(is_user)

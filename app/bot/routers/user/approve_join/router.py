@@ -1,3 +1,3 @@
 from aiogram import Router
 
-router = Router(name='approve_join')
+router = Router(name="approve_join")

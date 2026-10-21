@@ -3,7 +3,7 @@ from app.bot.routers.user.language.router import router
 from app.bot.routers.user.language.callback import ChooseLanguage, SetLanguage
 from app.bot.routers.user.language.keyboards import language as language_kb
 from app.bot.utilities import reply_edit
-from app.i18n.core import I18nContext
+from app.bot.i18n.core import I18nContext
 
 from aiogram.types import CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -49,10 +49,12 @@ async def set_language(
 
     if callback_data.back_to == "settings":
         from app.bot.routers.user.menu.keyboard import settings as settings_kb
+
         text = new_i18n.get("settings-text")
         keyboard = settings_kb.get(new_i18n)
     else:
         from app.bot.routers.user.registration.keyboards import welcome as welcome_kb
+
         text = new_i18n.get("welcome-text")
         keyboard = welcome_kb.get(new_i18n)
 

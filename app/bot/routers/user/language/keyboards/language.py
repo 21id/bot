@@ -1,8 +1,11 @@
 from app.bot.routers.user.language.callback import SetLanguage
-from app.i18n.core import I18nContext
+from app.bot.i18n.core import I18nContext
 
-from aiogram.utils.keyboard import (InlineKeyboardBuilder, InlineKeyboardButton,
-                                    InlineKeyboardMarkup)
+from aiogram.utils.keyboard import (
+    InlineKeyboardBuilder,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
 
 
 def get(
@@ -14,15 +17,19 @@ def get(
     builder = InlineKeyboardBuilder()
 
     for locale_code, display_name in locales:
-        builder.row(InlineKeyboardButton(
-            text=display_name,
-            callback_data=SetLanguage(locale=locale_code, back_to=back_to).pack()
-        ))
+        builder.row(
+            InlineKeyboardButton(
+                text=display_name,
+                callback_data=SetLanguage(locale=locale_code, back_to=back_to).pack(),
+            )
+        )
 
-    builder.row(InlineKeyboardButton(
-        text=i18n.get("btn-back"),
-        callback_data=_back_callback(back_to),
-    ))
+    builder.row(
+        InlineKeyboardButton(
+            text=i18n.get("btn-back"),
+            callback_data=_back_callback(back_to),
+        )
+    )
 
     return builder.as_markup()
 
@@ -30,6 +37,8 @@ def get(
 def _back_callback(back_to: str) -> str:
     if back_to == "settings":
         from app.bot.routers.user.menu.callback import Settings
+
         return Settings().pack()
     from app.bot.routers.user.registration.callback import RegistrationMenu
+
     return RegistrationMenu().pack()

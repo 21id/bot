@@ -9,9 +9,8 @@ from motor.motor_asyncio import AsyncIOMotorCursor
 class ChatRepository:
     """Chats database repository."""
 
-    def __init__(self, client: MongoClient | None):
+    def __init__(self, client: MongoClient | None) -> None:
         """Initialize Chat Repository."""
-
         # Params check
         if not all([client]):
             raise ValueError("MongoDB client is required")
@@ -32,7 +31,6 @@ class ChatRepository:
 
     async def upsert(self, chat_data: dict, chat_id: int) -> dict | None:
         """Update or insert chat by chat_id."""
-
         return await self.collection.update_one(
             {"chat_id": chat_id}, {"$set": chat_data}, upsert=True
         )

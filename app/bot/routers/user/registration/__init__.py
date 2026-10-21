@@ -1,2 +1,10 @@
 from .router import register_filters
-from .handlers import join_invite, welcome, info, start, nickname, verification, migration_otp
+from .handlers import (
+    join_invite,
+    welcome,
+    info,
+    start,
+    nickname,
+    verification,
+    migration_otp,
+)

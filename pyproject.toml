@@ -1,3 +1,14 @@
 [tool.black]
 line-length = 88
-target-version = ["py313"]
+target-version = ["py314"]
+[tool.pytest.ini_options]
+testpaths = ["app/tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = [
+    "ignore::DeprecationWarning:testcontainers.*",
+]
+markers = [
+    "unit: fast tests with mocked externals",
+    "integration: tests against real Mongo/Redis (testcontainers, needs Docker)",
+]

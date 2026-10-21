@@ -1,26 +1,36 @@
 import random
 
+from app.bot.i18n.core import I18nContext
 from app.bot.routers.user.migration.callback import MigrateConfirm
 
-from aiogram.utils.keyboard import (InlineKeyboardBuilder, InlineKeyboardButton,
-                                    InlineKeyboardMarkup)
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, KeyboardButtonRequestUsers
+from aiogram.utils.keyboard import (
+    InlineKeyboardBuilder,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+)
+from aiogram.types import (
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    KeyboardButtonRequestUsers,
+)
 
 
-def get_select_user(i18n=None) -> ReplyKeyboardMarkup:
+def get_select_user(i18n: I18nContext | None = None) -> ReplyKeyboardMarkup:
     """Keyboard for selecting a new Telegram account to migrate to."""
     text = i18n.get("btn-select-account") if i18n else "Select account"
     return ReplyKeyboardMarkup(
-        keyboard=[[
-            KeyboardButton(
-                text=text,
-                request_users=KeyboardButtonRequestUsers(
-                    request_id=1,
-                    user_is_bot=False,
-                    max_quantity=1,
+        keyboard=[
+            [
+                KeyboardButton(
+                    text=text,
+                    request_users=KeyboardButtonRequestUsers(
+                        request_id=1,
+                        user_is_bot=False,
+                        max_quantity=1,
+                    ),
                 )
-            )
-        ]],
+            ]
+        ],
         resize_keyboard=True,
         one_time_keyboard=True,
     )
@@ -36,16 +46,13 @@ def get_confirm() -> InlineKeyboardMarkup:
 
     buttons = [
         InlineKeyboardButton(
-            text=yes_text,
-            callback_data=MigrateConfirm(confirmed=True).pack()
+            text=yes_text, callback_data=MigrateConfirm(confirmed=True).pack()
         ),
         InlineKeyboardButton(
-            text=no_texts[0],
-            callback_data=MigrateConfirm(confirmed=False).pack()
+            text=no_texts[0], callback_data=MigrateConfirm(confirmed=False).pack()
         ),
         InlineKeyboardButton(
-            text=no_texts[1],
-            callback_data=MigrateConfirm(confirmed=False).pack()
+            text=no_texts[1], callback_data=MigrateConfirm(confirmed=False).pack()
         ),
     ]
     random.shuffle(buttons)

@@ -7,9 +7,8 @@ from app.infrastructure.mongodb.repositories.chat import ChatRepository
 class ChatService:
     """Chats service."""
 
-    def __init__(self, repo: ChatRepository | None):
+    def __init__(self, repo: ChatRepository | None) -> None:
         """Initialize Chat Service."""
-
         # Params check
         if not all([repo]):
             raise ValueError("Chat Repository is required")
@@ -52,8 +51,9 @@ class ChatService:
 
     async def update_topic_id(self, chat_id: int, topic_id: int) -> bool:
         """Update topic id of a chat."""
-        res = await self.repo.update(chat_id,
-                                     update={"$set": {"id_topic_id": topic_id}})
+        res = await self.repo.update(
+            chat_id, update={"$set": {"id_topic_id": topic_id}}
+        )
 
         if res.modified_count == 1:
             return True
@@ -61,8 +61,9 @@ class ChatService:
 
     async def set_allow_intensive(self, chat_id: int, result: bool) -> bool:
         """Setting if chat may allow intensive students."""
-        res = await self.repo.update(chat_id,
-                                     update={"$set": {"intensive_allowed": result}})
+        res = await self.repo.update(
+            chat_id, update={"$set": {"intensive_allowed": result}}
+        )
 
         if res.modified_count == 1:
             return True
@@ -102,8 +103,7 @@ class ChatService:
 
     async def set_join_link(self, chat_id: int, link: str) -> bool:
         """Setting join link."""
-        res = await self.repo.update(chat_id,
-                                     update={"$set": {"join_link": link}})
+        res = await self.repo.update(chat_id, update={"$set": {"join_link": link}})
 
         if res.modified_count == 1:
             return True

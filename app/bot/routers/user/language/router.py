@@ -4,5 +4,7 @@ router = Router(name="language")
 
 
 def register_filters() -> Router:
-    from .handlers import language
+    """Import handlers to register them and return router."""
+    from .handlers import language  # noqa: F401
+
     return router

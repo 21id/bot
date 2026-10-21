@@ -3,19 +3,21 @@ from app.bot.routers.user.menu.callback import Menu
 from app.bot.routers.user.menu.router import router
 from app.bot.routers.user.menu.keyboard import menu as menu_kb
 from app.bot.utilities import reply_edit
-from app.i18n.core import I18nContext
+from app.bot.i18n.core import I18nContext
 
 from aiogram import F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 
 
-@router.message(Command(commands=["start", "menu", "main"]),
-                F.chat.type.in_({"private"}))
+@router.message(
+    Command(commands=["start", "menu", "main"]), F.chat.type.in_({"private"})
+)
 @router.callback_query(Menu.filter())
 async def menu(
     request: Message | CallbackQuery, container: Container, i18n: I18nContext
-):
+) -> None:
+    """Show main menu."""
     user = await container.user_service.get_by_telegram_id(request.from_user.id)
 
     text = i18n.get("menu-greeting", nickname=user.nickname)

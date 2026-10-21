@@ -1,0 +1,22 @@
+# VCS and CI
+.git
+.github
+
+# IDE and local environments
+.idea
+.venv
+
+# Secrets and local configuration (never bake into the image)
+*.env
+dev.env
+prod.env
+
+# Non-runtime files
+misc
+materials
+scripts
+docker-compose*
+
+# Python cache
+__pycache__
+*.pyc

@@ -3,7 +3,7 @@ from app.bot.routers.user.registration.callback import RegistrationMenu
 from app.bot.routers.user.registration.keyboards import welcome as welcome_kb
 from app.bot.routers.user.registration.states import RegistrationStates
 from app.bot.utilities import reply_edit
-from app.i18n.core import I18nContext
+from app.bot.i18n.core import I18nContext
 
 from aiogram import F
 from aiogram.types import Message, CallbackQuery
@@ -13,15 +13,18 @@ from aiogram.fsm.context import FSMContext
 
 @router.message(StateFilter(None), CommandStart(), F.chat.type == "private")
 @router.callback_query(StateFilter(None), RegistrationMenu.filter())
-@router.callback_query(StateFilter(RegistrationStates.verification,
-                                   RegistrationStates.nickname),
-                       RegistrationMenu.filter())
+@router.callback_query(
+    StateFilter(RegistrationStates.verification, RegistrationStates.nickname),
+    RegistrationMenu.filter(),
+)
 async def welcome(
     request: Message | CallbackQuery, state: FSMContext, i18n: I18nContext
 ) -> None:
     """Welcome message."""
-    if await state.get_state() in [RegistrationStates.verification,
-                                   RegistrationStates.nickname]:
+    if await state.get_state() in [
+        RegistrationStates.verification,
+        RegistrationStates.nickname,
+    ]:
         # Preserve language across state clear
         lang = await state.get_value("language")
         await state.clear()
@@ -36,4 +39,5 @@ async def welcome(
 
 @router.message(StateFilter(None), CommandStart())
 async def welcome_in_group(message: Message, i18n: I18nContext) -> None:
+    """Reply to /start sent in a group chat."""
     await message.answer(i18n.get("welcome-in-group-text"))

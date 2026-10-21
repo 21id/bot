@@ -1,9 +1,10 @@
 from typing import Optional, Annotated
-from datetime import datetime
+from datetime import datetime, UTC
 
 from app.domain.campus.campus import Campus
 from app.domain.utils.omit import BaseModel_, OmitIfNone
 from app.domain.utils.object_id import PyObjectId
+from app.domain.verification.record import VerificationRecord
 
 from pydantic import model_validator, Field, ConfigDict
 
@@ -27,9 +28,11 @@ class User(BaseModel_):
     parallel: str | None = Field(alias="parallelName", default=None)
     campus: Campus
 
+    # Derived from verifications, still stored for queries and compatibility
     is_verified: bool
+    verifications: list[VerificationRecord] = Field(default_factory=list)
 
-    # Mandatory fields for verified user
+    # Linked Telegram account (identity is id, not telegram_id)
     telegram_id: int | None = None
 
     # Optional fields for verified user
@@ -40,11 +43,17 @@ class User(BaseModel_):
 
     # Invite one-time-code
     invite_otp: Annotated[str | None, OmitIfNone()] = None
+    invite_expires_at: Annotated[datetime | None, OmitIfNone()] = None
     migration_attempts: Annotated[dict | None, OmitIfNone()] = None
     language: Annotated[str | None, OmitIfNone()] = None
 
-    created_at: datetime = Field(default=datetime.now())
-    verified_at: datetime = Field(default=datetime.now())
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    verified_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    @property
+    def is_invited(self) -> bool:
+        """Check if user has a pending invite."""
+        return bool(self.invite_otp) and not self.is_verified
 
     @model_validator(mode="after")
     def validate_verified(self) -> "User":

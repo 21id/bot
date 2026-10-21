@@ -5,11 +5,12 @@ import os
 class I18nContext:
     """Translation context for a specific locale."""
 
-    def __init__(self, translations: dict, locale: str = "en"):
+    def __init__(self, translations: dict, locale: str = "en") -> None:
+        """Initialize context with locale translations."""
         self._translations = translations
         self.locale = locale
 
-    def get(self, key: str, **kwargs) -> str:
+    def get(self, key: str, **kwargs: object) -> str:
         """Return translated string for key, substituting kwargs placeholders.
 
         Falls back to the key name itself if translation is missing.
@@ -20,18 +21,20 @@ class I18nContext:
         if kwargs:
             try:
                 text = text.format(**kwargs)
-            except (KeyError, IndexError):
+            except KeyError, IndexError:
                 pass
         return text
 
-    def __call__(self, key: str, **kwargs) -> str:
+    def __call__(self, key: str, **kwargs: object) -> str:
+        """Shortcut for ``get``."""
         return self.get(key, **kwargs)
 
 
 class I18nCore:
     """Loads and manages JSON locale files from a directory."""
 
-    def __init__(self, locales_dir: str, default_locale: str = "en"):
+    def __init__(self, locales_dir: str, default_locale: str = "en") -> None:
+        """Initialize core with locales directory and default locale."""
         self.locales_dir = locales_dir
         self.default_locale = default_locale
         self._translations: dict[str, dict] = {}

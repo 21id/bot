@@ -1,4 +1,5 @@
 from aiogram import Router
+from aiogram.filters import and_f, or_f
 
 router = Router()
 
@@ -10,10 +11,10 @@ def register_filters() -> Router:
 
     # Applying filters to check if user is either not registered at all, or isn't
     # verified (added to database via public chats parsing)
-    not_exists = UserExists(exists=False) and UserVerified(verified=False)
-    not_verified = UserExists(exists=True) and UserVerified(verified=False)
+    not_exists = and_f(UserExists(exists=False), UserVerified(verified=False))
+    not_verified = and_f(UserExists(exists=True), UserVerified(verified=False))
 
-    router.message.filter(not_exists or not_verified)
-    router.callback_query.filter(not_exists or not_verified)
+    router.message.filter(or_f(not_exists, not_verified))
+    router.callback_query.filter(or_f(not_exists, not_verified))
 
     return router

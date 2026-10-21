@@ -4,7 +4,7 @@ from app.bot.routers.user.migration.states import MigrationStates
 from app.bot.routers.user.migration.callback import MigrateConfirm
 from app.bot.routers.user.menu.callback import AccountMigration
 from app.bot.routers.user.migration.keyboards import migration as migration_kb
-from app.i18n.core import I18nContext
+from app.bot.i18n.core import I18nContext
 
 from aiogram import F
 from aiogram.types import Message, CallbackQuery
@@ -56,8 +56,10 @@ async def user_selected(
 
 @router.callback_query(MigrateConfirm.filter(), StateFilter(MigrationStates.confirm_1))
 async def confirm_round_1(
-    callback: CallbackQuery, callback_data: MigrateConfirm,
-    state: FSMContext, i18n: I18nContext,
+    callback: CallbackQuery,
+    callback_data: MigrateConfirm,
+    state: FSMContext,
+    i18n: I18nContext,
 ) -> None:
     """First confirmation round."""
     if not callback_data.confirmed:
@@ -76,8 +78,10 @@ async def confirm_round_1(
 
 @router.callback_query(MigrateConfirm.filter(), StateFilter(MigrationStates.confirm_2))
 async def confirm_round_2(
-    callback: CallbackQuery, callback_data: MigrateConfirm,
-    state: FSMContext, i18n: I18nContext,
+    callback: CallbackQuery,
+    callback_data: MigrateConfirm,
+    state: FSMContext,
+    i18n: I18nContext,
 ) -> None:
     """Second confirmation round."""
     if not callback_data.confirmed:
@@ -96,8 +100,11 @@ async def confirm_round_2(
 
 @router.callback_query(MigrateConfirm.filter(), StateFilter(MigrationStates.confirm_3))
 async def confirm_round_3(
-    callback: CallbackQuery, callback_data: MigrateConfirm,
-    state: FSMContext, container: Container, i18n: I18nContext,
+    callback: CallbackQuery,
+    callback_data: MigrateConfirm,
+    state: FSMContext,
+    container: Container,
+    i18n: I18nContext,
 ) -> None:
     """Third and final confirmation round."""
     if not callback_data.confirmed:
@@ -106,7 +113,9 @@ async def confirm_round_3(
         await callback.answer()
         return
 
-    current_user = await container.user_service.get_by_telegram_id(callback.from_user.id)
+    current_user = await container.user_service.get_by_telegram_id(
+        callback.from_user.id
+    )
     if not current_user:
         await state.clear()
         await callback.message.edit_text(i18n.get("account-migration-error"))
@@ -114,6 +123,14 @@ async def confirm_round_3(
         return
 
     new_tg_id = int(await state.get_value("new_tg_id"))
+
+    # Re-checking target, as it could've registered during confirmation
+    if await container.user_service.telegram_id_taken(new_tg_id):
+        await state.clear()
+        await callback.message.edit_text(i18n.get("account-migration-taken"))
+        await callback.answer()
+        return
+
     await container.user_service.migrate_telegram_id(str(current_user.id), new_tg_id)
     await state.clear()
 

@@ -8,5 +8,4 @@ from aiogram.types import CallbackQuery
 @router.callback_query(StateFilter("*"), F.data == "none")
 async def none(callback: CallbackQuery) -> None:
     """Handle requests, that should do nothing."""
-
     await callback.answer()

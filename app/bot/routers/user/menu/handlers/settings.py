@@ -2,7 +2,7 @@ from app.bot.routers.user.menu.router import router
 from app.bot.routers.user.menu.callback import Settings
 from app.bot.routers.user.menu.keyboard import settings as settings_kb
 from app.bot.utilities import reply_edit
-from app.i18n.core import I18nContext
+from app.bot.i18n.core import I18nContext
 
 from aiogram import F
 from aiogram.types import Message, CallbackQuery

@@ -1,7 +1,7 @@
 from app.bot.routers.user.registration.router import router
 from app.bot.routers.user.registration.callback import GetDetails
 from app.bot.routers.user.registration.keyboards import info as info_kb
-from app.i18n.core import I18nContext
+from app.bot.i18n.core import I18nContext
 
 from aiogram.types import CallbackQuery
 from aiogram.filters import StateFilter
