@@ -1,0 +1,56 @@
+name: (MANUAL) Building Docker image for Development purposes
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Choose tag to build for'
+        required: true
+        default: latest-rc
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build image locally
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          load: true
+          push: false
+          tags: ghcr.io/21id/bot:${{ github.event.inputs.tag }}
+
+      - name: Scan image with Trivy
+        # Fails the build on any fixable CRITICAL vulnerability
+        uses: aquasecurity/trivy-action@0.36.0
+        with:
+          image-ref: ghcr.io/21id/bot:${{ github.event.inputs.tag }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: ghcr.io/21id/bot:${{ github.event.inputs.tag }}

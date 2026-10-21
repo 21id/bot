@@ -4,6 +4,8 @@ from os import getenv
 from app.bootstrap import bootstrap
 from app.bot.bot import main as start_bot
 
+import sentry_sdk
+
 
 async def main(
     s21api_base_url: str,
@@ -26,8 +28,15 @@ async def main(
 ) -> None:
     """Logging in School 21 API and starting the Telegram bot."""
     # Parameters check
-    if not all([s21api_base_url, s21api_auth_url, s21api_login, s21api_password,
-                s21api_auth_realm]):
+    if not all(
+        [
+            s21api_base_url,
+            s21api_auth_url,
+            s21api_login,
+            s21api_password,
+            s21api_auth_realm,
+        ]
+    ):
         raise Exception("Base and Auth URLs, credentials and auth realm are required")
     if not all([botapi_token, admin_id]):
         raise Exception("Bot API token and Admin TG ID are required")
@@ -55,16 +64,27 @@ async def main(
         smtp_password=smtp_password,
         smtp_sender=smtp_sender,
         redis_host=redis_host,
-        redis_password=redis_password
+        redis_password=redis_password,
+        admin_id=admin_id,
     )
 
-    await start_bot(
-        botapi_token=botapi_token,
-        container=container
-    )
+    await start_bot(botapi_token=botapi_token, container=container)
 
 
 if __name__ == "__main__":
+    if getenv("SENTRY_DSN"):
+        sentry_sdk.init(
+            dsn=getenv("SENTRY_DSN"),
+            environment=getenv("ENVIRONMENT", "production"),
+            traces_sample_rate=0,
+            send_default_pii=False,
+        )
+
+    # Integer params check (before casting)
+    for int_env in ("ADMIN_ID", "SMTP_PORT"):
+        if not (getenv(int_env) or "").isdigit():
+            raise Exception(f"{int_env} env variable is required and must be integer")
+
     s21api_base_url_ = getenv("S21API_BASE_URL")
     s21api_auth_url_ = getenv("S21API_AUTH_URL")
     s21api_auth_realm_ = getenv("S21API_AUTH_REALM")
@@ -85,13 +105,22 @@ if __name__ == "__main__":
 
     asyncio.run(
         main(
-            s21api_base_url=s21api_base_url_, s21api_auth_url=s21api_auth_url_,
-            s21api_auth_realm=s21api_auth_realm_, s21api_login=s21api_login_,
-            s21api_password=s21api_password_, botapi_token=botapi_token_,
-            admin_id=admin_id_, mongo_uri=mongo_uri_, mongo_dbname=mongo_dbname_,
-            templates_basedir=templates_basedir_, smtp_host=smtp_host_,
-            smtp_port=smtp_port_, smtp_login=smtp_login_,
-            smtp_password=smtp_password_, smtp_sender=smtp_sender_,
-            redis_host=redis_host_, redis_password=redis_password_
+            s21api_base_url=s21api_base_url_,
+            s21api_auth_url=s21api_auth_url_,
+            s21api_auth_realm=s21api_auth_realm_,
+            s21api_login=s21api_login_,
+            s21api_password=s21api_password_,
+            botapi_token=botapi_token_,
+            admin_id=admin_id_,
+            mongo_uri=mongo_uri_,
+            mongo_dbname=mongo_dbname_,
+            templates_basedir=templates_basedir_,
+            smtp_host=smtp_host_,
+            smtp_port=smtp_port_,
+            smtp_login=smtp_login_,
+            smtp_password=smtp_password_,
+            smtp_sender=smtp_sender_,
+            redis_host=redis_host_,
+            redis_password=redis_password_,
         )
     )

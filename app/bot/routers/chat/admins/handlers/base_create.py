@@ -9,7 +9,6 @@ from aiogram.filters import Command
 @router.message(Command(commands=["base_create"]))
 async def base_create(message: Message, container: Container) -> None:
     """Creating chat object in database."""
-
     chat = await container.chat_service.get_by_telegram_id(message.chat.id)
 
     if not chat:

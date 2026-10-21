@@ -1,17 +1,25 @@
+import html
+
+import sentry_sdk
+
 from app.bootstrap import Container
 from app.bot.routers.chat.join.router import router
-from app.bot.routers.user.registration.keyboards import (student_deeplink as
-                                                         student_deeplink_kb)
+from app.bot.routers.user.registration.keyboards import (
+    student_deeplink as student_deeplink_kb,
+)
+from app.bot.i18n.core import I18nContext
 
 from aiogram.enums import ParseMode
+from aiogram.exceptions import TelegramAPIError
 from aiogram.types import ChatMemberUpdated
 from aiogram.filters import ChatMemberUpdatedFilter, JOIN_TRANSITION
 
 
 @router.chat_member(ChatMemberUpdatedFilter(member_status_changed=JOIN_TRANSITION))
-async def handle_join(event: ChatMemberUpdated, container: Container) -> None:
+async def handle_join(  # noqa: C901
+    event: ChatMemberUpdated, container: Container, i18n: I18nContext
+) -> None:
     """Handling chat joins."""
-
     # Checking if chat is registered
     chat = await container.chat_service.get_by_telegram_id(chat_id=event.chat.id)
     if not chat:
@@ -24,8 +32,7 @@ async def handle_join(event: ChatMemberUpdated, container: Container) -> None:
 
     # Checking if user is valid 21ID user
     user_tg_id = event.new_chat_member.user.id
-    user = await container.user_service.get_by_telegram_id(
-        telegram_id=user_tg_id)
+    user = await container.user_service.get_by_telegram_id(telegram_id=user_tg_id)
     if not user:
         return
 
@@ -33,15 +40,18 @@ async def handle_join(event: ChatMemberUpdated, container: Container) -> None:
     if chat.id_topic_id:
         # Try to send message to ID topic
         try:
+            campus = user.campus.short_name if user.campus else "-"
             local_text = (
-                f'<a href="tg://user?id={user.telegram_id}">{user.nickname}</a> '
-                f'({user.wave_name}, {user.campus.short_name})'
+                f'<a href="tg://user?id={user.telegram_id}">'
+                f"{html.escape(user.nickname)}</a> "
+                f"({html.escape(str(user.wave_name))}, {html.escape(campus)})"
             )
 
             chat_info = await event.bot.get_chat(user_tg_id)
             if not chat_info.has_private_forwards:
-                keyboard = student_deeplink_kb.get(chat_id=user_tg_id,
-                                                   nickname=user.nickname)
+                keyboard = student_deeplink_kb.get(
+                    chat_id=user_tg_id, nickname=user.nickname
+                )
             else:
                 keyboard = student_deeplink_kb.get(nickname=user.nickname)
 
@@ -52,20 +62,23 @@ async def handle_join(event: ChatMemberUpdated, container: Container) -> None:
                 reply_markup=keyboard,
                 parse_mode=ParseMode.HTML,
             )
-        except Exception as e:
-            print("ERROR SENDING ID TO TOPIC", e)
+        except TelegramAPIError as e:
+            sentry_sdk.capture_exception(e)
 
     # Try to send welcome message to user
     try:
-        text = f"👋 Dear {user.nickname}, welcome to '{chat_title}'!"
+        text = i18n.get(
+            "chat-join-welcome", nickname=user.nickname, chat_title=chat_title
+        )
 
         # Adding chat description
         if chat.desc_on_join:
-            text += f"\n\nJoin message:\n{chat.desc_on_join}"
+            text += i18n.get("chat-join-message", text=chat.desc_on_join)
 
         await event.bot.send_message(
             chat_id=user.telegram_id,
             text=text,
         )
-    except Exception as e:
+    except TelegramAPIError:
+        # User hasn't started the bot or blocked it - nothing to do
         pass

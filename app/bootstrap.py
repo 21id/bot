@@ -1,6 +1,8 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
 
 from app.domain.chat.service import ChatService
+from app.infrastructure.mongodb import migrations
 from app.infrastructure.mongodb.client import MongoClient
 from app.infrastructure.mongodb.repositories.chat import ChatRepository
 from app.infrastructure.mailer.client import MailerClient
@@ -9,6 +11,11 @@ from app.infrastructure.s21.v1.models.auth.credentials import Credentials
 from app.infrastructure.s21.v1.client import S21APIClient
 from app.infrastructure.mongodb.repositories.user import UserRepository
 from app.domain.user.service import UserService
+from app.domain.verification.service import VerificationService
+from app.infrastructure.verification.email_otp import (
+    EmailOtpProvider,
+    MigrationOtpProvider,
+)
 
 from redis.asyncio import Redis
 
@@ -16,11 +23,17 @@ from redis.asyncio import Redis
 @dataclass
 class Container:
     """Services of 21ID app."""
+
     user_service: UserService
     chat_service: ChatService
+    verification_service: VerificationService
     s21api_client: S21APIClient
     mail_client: MailerClient
     redis: Redis
+    mongo: MongoClient
+    admin_id: int
+    i18n_core: Any = field(default=None)
+
 
 async def bootstrap(
     *,
@@ -38,14 +51,15 @@ async def bootstrap(
     smtp_password: str,
     smtp_sender: str,
     redis_host: str,
-    redis_password: str
+    redis_password: str,
+    admin_id: int,
 ) -> Container:
-    """Initialization of infra (database) -> repos (db mappers) -> services
-    (providers)."""
-
+    """Initialize infra (database) -> repos (db mappers) -> services (providers)."""
     # - - - Infrastructure - - -
     redis = Redis(
-        host=redis_host, password=redis_password, socket_connect_timeout=2,
+        host=redis_host,
+        password=redis_password,
+        socket_connect_timeout=2,
         decode_responses=True,
     )
     # Checking Redis connection
@@ -53,8 +67,9 @@ async def bootstrap(
 
     mongo = MongoClient(uri=mongo_uri, db_name=mongo_dbname)
 
-    if not mongo.client.admin.command('ping'):
-        raise Exception("Mongo connection failed")
+    # Checking Mongo connection (raises on failure) and applying migrations
+    await mongo.client.admin.command("ping")
+    await migrations.run(mongo.db)
 
     s21api_client = await S21APIClient.from_credentials(
         base_url=s21api_base_url,
@@ -66,9 +81,7 @@ async def bootstrap(
         ),
     )
 
-    template_renderer = TemplateRenderer(
-        templates_dir=templates_basedir
-    )
+    template_renderer = TemplateRenderer(templates_dir=templates_basedir)
 
     mailer = await MailerClient.initialize(
         smtp_host=smtp_host,
@@ -86,11 +99,19 @@ async def bootstrap(
     # - - - - Services - - - -
     user_service = UserService(repo=user_repo)
     chat_service = ChatService(repo=chat_repo)
-    
+    verification_service = VerificationService(
+        providers=[EmailOtpProvider(mail_client=mailer), MigrationOtpProvider()],
+        redis=redis,
+        user_service=user_service,
+    )
+
     return Container(
         user_service=user_service,
         chat_service=chat_service,
+        verification_service=verification_service,
         s21api_client=s21api_client,
         mail_client=mailer,
-        redis=redis
+        redis=redis,
+        mongo=mongo,
+        admin_id=admin_id,
     )

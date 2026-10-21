@@ -8,7 +8,6 @@ from aiogram.filters import Command
 @router.message(Command(commands=["list_settings"]))
 async def list_settings(message: Message, container: Container) -> None:
     """Listing all chat settings."""
-
     chat = await container.chat_service.get_by_telegram_id(message.chat.id)
 
     if chat:

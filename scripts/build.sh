@@ -21,7 +21,7 @@ else
 fi
 
 # Building image for linux/amd64 (as set in Dockerfile)
-${command} build -t ${tag} .
+${command} build --platform linux/amd64 -t ${tag} .
 
 # If tag with GHCR is chosen - ask if user want to push it
 if [[ "${tag_id}" == "2" || "${tag_id}" == "3" ]]; then

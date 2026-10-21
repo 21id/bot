@@ -6,10 +6,10 @@ from aiogram.filters import Command, CommandObject
 
 
 @router.message(Command(commands=["set_join_link"]))
-async def set_join_link(message: Message, command: CommandObject,
-                        container: Container) -> None:
+async def set_join_link(
+    message: Message, command: CommandObject, container: Container
+) -> None:
     """Setting join link in chat settings."""
-
     join_link: str = command.args
 
     # Returning if no join link has been provided

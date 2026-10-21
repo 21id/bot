@@ -1,4 +1,5 @@
 from aiogram import Router
+from aiogram.filters import and_f
 
 router = Router(name="menu")
 
@@ -9,7 +10,7 @@ def register_filters() -> Router:
     from app.bot.filters.user_verified import UserVerified
 
     # Applying filters to check if is fully verified and registered
-    verified = UserExists(exists=True) and UserVerified(verified=True)
+    verified = and_f(UserExists(exists=True), UserVerified(verified=True))
 
     router.message.filter(verified)
     router.callback_query.filter(verified)

@@ -1,9 +1,10 @@
+import asyncio
 from email.message import EmailMessage
-from smtplib import SMTPServerDisconnected
 
 from app.infrastructure.mailer.renderer import TemplateRenderer
 
 import aiosmtplib
+import sentry_sdk
 from aiosmtplib import SMTPResponse
 
 
@@ -11,17 +12,16 @@ class MailerClient:
     """Email sender client."""
 
     def __init__(
-            self,
-            smtp_host: str,
-            smtp_port: int,
-            login: str,
-            password: str,
-            sender: str,
-            template_renderer: TemplateRenderer,
-            smtp_client: aiosmtplib.SMTP,
-    ):
+        self,
+        smtp_host: str,
+        smtp_port: int,
+        login: str,
+        password: str,
+        sender: str,
+        template_renderer: TemplateRenderer,
+        smtp_client: aiosmtplib.SMTP,
+    ) -> None:
         """Initialization of mailer client."""
-
         # Params validation
         if not all([smtp_host, login, password, sender]):
             raise Exception(
@@ -37,6 +37,8 @@ class MailerClient:
         self.sender = sender
         self.template_renderer = template_renderer
         self.smtp_client = smtp_client
+        # Shared SMTP connection can't be used concurrently
+        self._lock = asyncio.Lock()
 
         # Checking if SMTP client is connected to server
         if not smtp_client.is_connected:
@@ -44,22 +46,25 @@ class MailerClient:
 
     @classmethod
     async def initialize(
-            cls,
-            smtp_host: str,
-            smtp_port: int,
-            login: str,
-            password: str,
-            sender: str,
-            template_renderer: TemplateRenderer,
-            use_tls: bool = False,
+        cls,
+        smtp_host: str,
+        smtp_port: int,
+        login: str,
+        password: str,
+        sender: str,
+        template_renderer: TemplateRenderer,
     ) -> "MailerClient":
-        """Initialization of mailer client from SMTP server, logging in."""
+        """Initialization of mailer client from SMTP server, logging in.
 
+        Port 465 uses implicit TLS, any other port (e.g. Brevo's 587) - STARTTLS.
+        """
         # Creating SMTP connection and logging in
         smtp = aiosmtplib.SMTP(
             hostname=smtp_host,
             port=smtp_port,
-            use_tls=use_tls,
+            use_tls=smtp_port == 465,
+            start_tls=smtp_port != 465,
+            timeout=10,
         )
 
         await smtp.connect()
@@ -72,12 +77,33 @@ class MailerClient:
             password=password,
             sender=sender,
             template_renderer=template_renderer,
-            smtp_client=smtp
+            smtp_client=smtp,
         )
 
-    async def send_mail_html(self, to: str, subject: str, message_html: str,
-                             message_text: str | None = None) -> (dict, str):
+    async def _reconnect(self) -> None:
+        """Drop current SMTP connection (ignoring errors) and log in again."""
+        try:
+            await self.smtp_client.quit()
+        except aiosmtplib.SMTPException:
+            self.smtp_client.close()
+
+        await self.smtp_client.connect()
+        await self.smtp_client.login(self.login, self.password)
+
+    async def close(self) -> None:
+        """Close SMTP connection, ignoring errors."""
+        try:
+            await self.smtp_client.quit()
+        except aiosmtplib.SMTPException:
+            self.smtp_client.close()
+
+    async def send_mail_html(
+        self, to: str, subject: str, message_html: str, message_text: str | None = None
+    ) -> tuple[dict[str, SMTPResponse], str]:
         """Send email with HTML data."""
+        # Header injection protection
+        if "\r" in to or "\n" in to:
+            raise ValueError("Recipient address must not contain line breaks")
 
         # If user's client doesn't support HTML - user
         if not message_text:
@@ -91,63 +117,50 @@ class MailerClient:
         msg.set_content(message_text)
         msg.add_alternative(message_html, subtype="html")
 
-        try:
-            if not self.smtp_client.is_connected:
-                await self.smtp_client.connect()
-                await self.smtp_client.login(self.login, self.password)
+        async with self._lock:
+            try:
+                if not self.smtp_client.is_connected:
+                    await self.smtp_client.connect()
+                    await self.smtp_client.login(self.login, self.password)
 
-            response = await self.smtp_client.send_message(msg)
+                return await self.smtp_client.send_message(msg)
 
-        except aiosmtplib.SMTPException as e:
-            print(e)
-            # Force reconnecting and checking state
-            await self.smtp_client.quit()
-            await self.smtp_client.connect()
-            await self.smtp_client.login(self.login, self.password)
-            if not self.smtp_client.is_connected:
-                raise Exception("Could not connect to SMTP server")
-
-            response = await self.smtp_client.send_message(msg)
-
-        print(to, subject, response)
-
-        return response
+            except aiosmtplib.SMTPException as e:
+                sentry_sdk.add_breadcrumb(
+                    category="smtp",
+                    level="warning",
+                    message=f"SMTP send failed, reconnecting: {type(e).__name__}",
+                )
+                # Force reconnecting and resending once
+                await self._reconnect()
+                return await self.smtp_client.send_message(msg)
 
     async def send_from_template(
-            self, to: str, subject: str, template_name: str, context: dict,
-            default: str | None = None
+        self,
+        to: str,
+        subject: str,
+        template_name: str,
+        context: dict,
+        default: str | None = None,
     ) -> bool:
         """Send email to user with template.
 
         :return: Boolean status if message has been sent or not.
         """
-
         rendered_template = self.template_renderer.render(
             template_name=template_name, context=context
         )
 
         # Sending a message if template has been rendered
         if rendered_template:
-            response = await self.send_mail_html(
-                to=to, subject=subject, message_html=rendered_template,
-                message_text=default
+            rejected, _ = await self.send_mail_html(
+                to=to,
+                subject=subject,
+                message_html=rendered_template,
+                message_text=default,
             )
 
-            # Returning status of sent email msg - has it been sent to end-user or not
-            response_status_text: str = response[1]
-            return self.check_if_sent(response_status_text)
+            # Sent if server accepted all recipients
+            return not rejected
 
-        return False
-
-    @staticmethod
-    def check_if_sent(response: str) -> bool:
-        """Simple function to check if message has been sent
-
-        By the server to the recipient, that's why 3xy and 4xy errors aren't included.
-        """
-
-        code = response.split(" ")[0].replace(".", "")
-
-        if code.startswith("2"):
-            return True
         return False

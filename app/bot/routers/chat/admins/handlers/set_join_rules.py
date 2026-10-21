@@ -6,16 +6,16 @@ from aiogram.filters import Command, CommandObject
 
 
 @router.message(Command(commands=["allow_intensive"]))
-async def allow_intensive(message: Message, command: CommandObject,
-                          container: Container) -> None:
+async def allow_intensive(
+    message: Message, command: CommandObject, container: Container
+) -> None:
     """Setting 'allow_intensive' in chat settings."""
-
     action: str = command.args
     positive_actions = ["true", "yes"]
     negative_actions = ["deny", "no"]
     allowed_actions = [*positive_actions, *negative_actions]
 
-    if not action in allowed_actions:
+    if action not in allowed_actions:
         text = (
             "Invalid action!\nUse true/yes or deny/no\n\n"
             "For example: /allow_intensive false"
@@ -36,17 +36,18 @@ async def allow_intensive(message: Message, command: CommandObject,
     )
     await message.reply(text)
 
-@router.message(Command(commands=["allow_core"]))
-async def allow_core(message: Message, command: CommandObject,
-                     container: Container) -> None:
-    """Setting 'allow_core' in chat settings."""
 
+@router.message(Command(commands=["allow_core"]))
+async def allow_core(
+    message: Message, command: CommandObject, container: Container
+) -> None:
+    """Setting 'allow_core' in chat settings."""
     action: str = command.args
     positive_actions = ["true", "yes"]
     negative_actions = ["deny", "no"]
     allowed_actions = [*positive_actions, *negative_actions]
 
-    if not action in allowed_actions:
+    if action not in allowed_actions:
         text = (
             "Invalid action!\nUse true/yes or deny/no\n\n"
             "For example: /allow_intensive false"

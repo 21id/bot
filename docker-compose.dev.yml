@@ -1,0 +1,59 @@
+# Local development stack: Bugsink (Sentry-compatible error tracking),
+# MongoDB, Redis and an optional bot container.
+# Start infra only:  docker compose -f docker-compose.dev.yml up -d
+# Include the bot:   docker compose -f docker-compose.dev.yml --profile bot up -d
+# Required variables are read from the repo-root .env file.
+
+services:
+  bugsink:
+    image: bugsink/bugsink:2.6.1
+    ports:
+      - "8000:8000"
+    environment:
+      # Required, at least 50 characters
+      SECRET_KEY: ${BUGSINK_SECRET_KEY:?set BUGSINK_SECRET_KEY in .env}
+      # Format: username:password (placeholder for local dev only)
+      CREATE_SUPERUSER: ${BUGSINK_SUPERUSER:-admin:admin}
+      PORT: 8000
+      BASE_URL: http://localhost:8000
+    volumes:
+      - bugsink-data:/data
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?set MONGO_USER in .env}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?set MONGO_PASSWORD in .env}
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}"]
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - dev.env
+    depends_on:
+      - mongo
+      - redis
+      - bugsink
+    profiles:
+      - bot
+
+volumes:
+  bugsink-data:
+  mongo-data:
+  redis-data:

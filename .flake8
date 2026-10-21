@@ -1,7 +1,10 @@
 [flake8]
 max-line-length = 88
-select = E,F,W,B,C90,ANN,D,N,RET
-extend-ignore = E203, W503, D100, D104
+select = E,F,W,B,C90,ANN,D,N
+extend-ignore = E203, W503, D100, D104, ANN101, ANN102
+per-file-ignores =
+    app/tests/*: D,ANN
+    app/**/__init__.py: F401
 
 max-complexity = 8
 

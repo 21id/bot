@@ -1,6 +1,10 @@
+import sentry_sdk
+
 from app.bootstrap import Container
+from app.domain.verification.method import VerificationMethod
 from app.bot.routers.user.registration.router import router
 from app.bot.routers.user.menu.keyboard import menu as menu_kb
+from app.bot.i18n.core import I18nContext
 
 from aiogram.types import Message
 from aiogram.filters import CommandObject, CommandStart
@@ -8,47 +12,32 @@ from aiogram.filters import CommandObject, CommandStart
 
 @router.message(CommandStart(deep_link=True))
 async def join_invite(
-        message: Message, command: CommandObject, container: Container
-):
+    message: Message, command: CommandObject, container: Container, i18n: I18nContext
+) -> None:
     """Using invite OTP to verify user."""
-
     invite_otp: str = command.args
 
     user = await container.user_service.get_by_invite_otp(invite_otp)
 
-    # Notify user that bot can't find user in database by his invite OTP
     if not user:
-        text = (
-            f"❌ Dear user, your OTP is expired (already used) or doesn't "
-            "exist. Please, try to get your link again from Invitation email\n\n❓ If "
-            "you have  any questions or believe that it's a mistake - please contact "
-            "@megaplov"
-        )
+        await message.reply(i18n.get("join-invite-not-found"))
+        return
 
-        await message.reply(text)
+    if await container.user_service.telegram_id_taken(message.from_user.id):
+        await message.reply(i18n.get("join-invite-already-registered"))
         return
 
     keyboard = None
 
     try:
-        # Verify user
-        user.telegram_id = message.from_user.id
-        await container.user_service.verify(user)
+        await container.verification_service.complete(
+            user, VerificationMethod.INVITE, message.from_user.id
+        )
     except Exception as e:
-        # TODO: add error logging
-        text = (
-            f"❗️ Error has occurred on Database update\n\n"
-            f"Message: {e}\n\n"
-            "✍️ Please, notify @megaplov about this problem from your perspective"
-        )
+        sentry_sdk.capture_exception(e)
+        text = i18n.get("join-invite-db-error")
     else:
-        text = (
-            f"👋 Welcome to 21ID, {user.nickname}!\n\n🔽 Basic functionality that "
-            "you may need is right below, which you can access in main menu with "
-            "/start command\n\n🪪 To find other peers, please use inline mode. "
-            "Guide on how to use 21ID Bot inline search is here: t.me/ident21/9"
-        )
+        text = i18n.get("join-invite-success", nickname=user.nickname)
+        keyboard = menu_kb.get(i18n)
 
-        keyboard = menu_kb.get()
-
-    await message.reply(text, keyboard=keyboard)
+    await message.reply(text, reply_markup=keyboard)

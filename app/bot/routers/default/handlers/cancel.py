@@ -1,6 +1,8 @@
 from app.bot.routers.default.router import router
+from app.bot.i18n.core import I18nContext
 
 from aiogram import Bot
+from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import StateFilter, Command
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
@@ -8,18 +10,19 @@ from aiogram.methods import DeclineChatJoinRequest
 
 
 @router.message(StateFilter(None), Command(commands=["cancel"]))
-async def cancel_nothing(message: Message) -> None:
+async def cancel_nothing(message: Message, i18n: I18nContext) -> None:
     """Handle requests, that should cancel state info, but there is none."""
-
-    text = "Nothing to cancel, but.. okay?\n\nCanceled successfully!"
+    text = i18n.get("cancel-nothing")
 
     await message.reply(text)
 
-@router.message(StateFilter("*"), Command(commands=["cancel"]))
-async def cancel(message: Message, state: FSMContext, bot: Bot) -> None:
-    """Handle requests, that should cancel state info."""
 
-    text = "Canceled successfully!"
+@router.message(StateFilter("*"), Command(commands=["cancel"]))
+async def cancel(
+    message: Message, state: FSMContext, bot: Bot, i18n: I18nContext
+) -> None:
+    """Handle requests, that should cancel state info."""
+    text = i18n.get("cancel-success")
 
     # Checking if user has been joining a chat, when canceling his state
     if await state.get_value("is_joining_chat"):
@@ -27,13 +30,11 @@ async def cancel(message: Message, state: FSMContext, bot: Bot) -> None:
         user_id = message.from_user.id
         try:
             await bot(DeclineChatJoinRequest(chat_id=chat_id, user_id=user_id))
-        except:
+        except TelegramAPIError:
+            # Join request may be already processed or expired
             pass
 
-        text += (
-            "\n\nBut because you were joining a chat - I should cancel your join "
-            "request. But you can try to join again, or verify yourself with /start"
-        )
+        text += i18n.get("cancel-join-extra")
 
     # Clearing FSM data
     await state.clear()
