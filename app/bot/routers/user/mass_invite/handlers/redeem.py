@@ -13,6 +13,7 @@ from app.bot.i18n.core import I18nContext
 
 from aiogram import F, Bot
 from aiogram.types import Message
+from aiogram.enums import ParseMode
 from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import CommandObject, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -138,3 +139,9 @@ async def redeem_nickname(  # noqa: C901
         i18n.get("mass-invite-success", nickname=nickname_),
         reply_markup=menu_kb.get(i18n),
     )
+
+    if link.welcome_message:
+        try:
+            await message.answer(link.welcome_message, parse_mode=ParseMode.HTML)
+        except TelegramAPIError as e:
+            sentry_sdk.capture_exception(e)

@@ -8,13 +8,15 @@ from aiogram.utils.keyboard import (
 )
 
 
-def get(i18n: I18nContext) -> InlineKeyboardMarkup:
-    """Creating inline keyboard to finish nicknames collection."""
+def get(
+    i18n: I18nContext, done_key: str = "mass-invite-btn-done"
+) -> InlineKeyboardMarkup:
+    """Creating inline keyboard to finish nicknames collection (or skip a step)."""
     builder = InlineKeyboardBuilder()
 
     builder.row(
         InlineKeyboardButton(
-            text=i18n.get("mass-invite-btn-done"),
+            text=i18n.get(done_key),
             callback_data=MassInviteFinish(done=True).pack(),
         ),
         InlineKeyboardButton(

@@ -16,10 +16,18 @@ class MassInviteService:
 
         self.repo = repo
 
-    async def create(self, nicknames: list[str], created_by: int) -> MassInvite:
-        """Create link for nicknames."""
+    async def create(
+        self,
+        nicknames: list[str],
+        created_by: int,
+        welcome_message: str | None = None,
+    ) -> MassInvite:
+        """Create link for nicknames, with optional welcome message."""
         link = MassInvite(
-            id=secrets.token_urlsafe(16), nicknames=nicknames, created_by=created_by
+            id=secrets.token_urlsafe(16),
+            nicknames=nicknames,
+            created_by=created_by,
+            welcome_message=welcome_message,
         )
         data = link.model_dump()
         data["_id"] = data.pop("id")

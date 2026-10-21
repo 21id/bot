@@ -54,7 +54,7 @@ async def finish(
     bot: Bot,
     i18n: I18nContext,
 ) -> None:
-    """Create the link (done) or drop collected nicknames (cancel)."""
+    """Ask for welcome message (done) or drop collected nicknames (cancel)."""
     if not callback_data.done:
         await state.clear()
         await callback.message.edit_text(i18n.get("cancel-success"))
@@ -65,6 +65,59 @@ async def finish(
         await callback.answer(i18n.get("mass-invite-empty"), show_alert=True)
         return
 
+    await state.set_state(MassInviteStates.welcome_message)
+    await callback.message.edit_text(
+        i18n.get("mass-invite-welcome-prompt", count=len(nicknames)),
+        reply_markup=collect_kb.get(i18n, done_key="mass-invite-btn-skip"),
+    )
+
+
+@router.message(StateFilter(MassInviteStates.welcome_message), F.text, is_owner)
+async def welcome_message(
+    message: Message,
+    state: FSMContext,
+    container: Container,
+    bot: Bot,
+    i18n: I18nContext,
+) -> None:
+    """Create the link with owner's welcome message (formatting is kept)."""
+    welcome_message_ = message.html_text
+    if len(welcome_message_) > 3500:
+        await message.reply(i18n.get("mass-invite-welcome-too-long"))
+        return
+
+    nicknames: list[str] = await state.get_value("mi_nicknames") or []
+    link = await container.mass_invite_service.create(
+        nicknames, message.from_user.id, welcome_message=welcome_message_
+    )
+    me = await bot.me()
+    url = f"https://t.me/{me.username}?start=mi_{link.id}"
+    await state.clear()
+
+    text = i18n.get("mass-invite-created", url=url, count=len(nicknames))
+    await message.reply(text)
+
+
+@router.callback_query(
+    StateFilter(MassInviteStates.welcome_message),
+    MassInviteFinish.filter(),
+    is_owner,
+)
+async def skip_welcome_message(
+    callback: CallbackQuery,
+    callback_data: MassInviteFinish,
+    state: FSMContext,
+    container: Container,
+    bot: Bot,
+    i18n: I18nContext,
+) -> None:
+    """Create the link without welcome message (skip) or cancel creation."""
+    if not callback_data.done:
+        await state.clear()
+        await callback.message.edit_text(i18n.get("cancel-success"))
+        return
+
+    nicknames: list[str] = await state.get_value("mi_nicknames") or []
     link = await container.mass_invite_service.create(nicknames, callback.from_user.id)
     me = await bot.me()
     url = f"https://t.me/{me.username}?start=mi_{link.id}"

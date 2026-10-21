@@ -5,6 +5,8 @@ from app.bot.routers.user.mass_invite.handlers.create import (
     collect,
     finish,
     mass_invite,
+    skip_welcome_message,
+    welcome_message,
 )
 from app.bot.routers.user.mass_invite.handlers.redeem import (
     redeem_link,
@@ -54,7 +56,9 @@ def bot():
     return b
 
 
-async def _create_link(container, redis, bot, i18n, nicknames: str) -> str:
+async def _create_link(
+    container, redis, bot, i18n, nicknames: str, welcome: str | None = None
+) -> str:
     state = _state(redis, OWNER_ID)
     await mass_invite(
         message=_message("/mass_invite", OWNER_ID), state=state, i18n=i18n
@@ -74,8 +78,26 @@ async def _create_link(container, redis, bot, i18n, nicknames: str) -> str:
         bot=bot,
         i18n=i18n,
     )
+    assert await state.get_state() == MassInviteStates.welcome_message.state
+
+    if welcome:
+        msg = _message(welcome, OWNER_ID)
+        msg.html_text = welcome
+        await welcome_message(
+            message=msg, state=state, container=container, bot=bot, i18n=i18n
+        )
+        text = msg.reply.await_args.args[0]
+    else:
+        await skip_welcome_message(
+            callback=callback,
+            callback_data=MassInviteFinish(done=True),
+            state=state,
+            container=container,
+            bot=bot,
+            i18n=i18n,
+        )
+        text = callback.message.edit_text.await_args.args[0]
     assert await state.get_state() is None
-    text = callback.message.edit_text.await_args.args[0]
     return text.split("?start=")[1].strip()
 
 
@@ -114,6 +136,36 @@ async def test_owner_creates_student_redeems(container, redis, bot, i18n, user_s
     assert "mass-invite" in bot.send_message.await_args.args[1]
     link = await container.mass_invite_service.get(payload[3:])
     assert link.used_by == {"jdoe": TG_ID}
+    assert link.welcome_message is None
+    msg.answer.assert_not_awaited()
+
+
+async def test_welcome_message_sent_after_redeem(
+    container, redis, bot, i18n, user_service
+):
+    container.s21api_client.get_student_by_nickname.return_value = STUDENT
+    welcome = "<b>Rules</b>: be nice. Chat: https://t.me/example"
+    payload = await _create_link(container, redis, bot, i18n, "jdoe", welcome=welcome)
+
+    _, msg, _ = await _redeem(container, redis, bot, i18n, payload, "jdoe")
+
+    assert msg.answer.await_args.args[0] == welcome
+    assert msg.answer.await_args.kwargs["parse_mode"] == "HTML"
+
+
+async def test_welcome_message_too_long(container, redis, bot, i18n):
+    state = _state(redis, OWNER_ID)
+    await state.set_state(MassInviteStates.welcome_message)
+    await state.update_data(mi_nicknames=["jdoe"])
+    msg = _message("x", OWNER_ID)
+    msg.html_text = "x" * 3501
+
+    await welcome_message(
+        message=msg, state=state, container=container, bot=bot, i18n=i18n
+    )
+
+    assert msg.reply.await_args.args[0] == i18n.get("mass-invite-welcome-too-long")
+    assert await state.get_state() == MassInviteStates.welcome_message.state
 
 
 async def test_nickname_not_in_list(container, redis, bot, i18n, user_service):

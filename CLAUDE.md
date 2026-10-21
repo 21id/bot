@@ -73,9 +73,11 @@ Feature folder pattern under `routers/`: `router.py` (+ `register_filters()`),
   **non-existent** in search, mentions and notifications.
 - **Mass-invite** (*temporary*, isolated in `routers/user/mass_invite/`,
   `domain/mass_invite/`, `mass_invite` collection): owner (`ADMIN_ID`) sends
-  `/mass_invite` + nicknames → link `t.me/<bot>?start=mi_<token>` (30 days). Student
-  sends his nickname (5 tries/hour); if it's in the list and free → verified without
-  OTP (`VerificationMethod.MASS_INVITE`), otherwise asked to contact @megaplov.
+  `/mass_invite` + nicknames → optional welcome message (HTML kept, ≤3500 chars, or
+  Skip) → link `t.me/<bot>?start=mi_<token>` (30 days). Student sends their nickname
+  (5 tries/hour); if it's in the list and free → verified without OTP
+  (`VerificationMethod.MASS_INVITE`) and gets the welcome message, otherwise asked to
+  contact @megaplov.
 - **Errors**: `ErrorMiddleware` catches everything; users only ever see
   `BaseError.client_message` or a generic text plus the error UUID.
 

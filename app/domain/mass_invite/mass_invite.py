@@ -22,6 +22,8 @@ class MassInvite(BaseModel_):
     expires_at: datetime = Field(default_factory=lambda: datetime.now(UTC) + LIFETIME)
     # nickname -> Telegram id which redeemed it
     used_by: dict[str, int] = Field(default_factory=dict)
+    # Owner's message (Telegram HTML) sent to students after verification
+    welcome_message: str | None = None
 
 
 def parse_nicknames(text: str) -> tuple[list[str], list[str]]:
