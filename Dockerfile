@@ -3,7 +3,7 @@
 # Pinned to linux/amd64 as the production target.
 # For reproducible builds, pin the base image by digest, e.g.:
 # FROM --platform=linux/amd64 python:3.14-slim@sha256:<digest>
-FROM --platform=linux/amd64 python:3.14-slim AS build-image
+FROM --platform=linux/amd64 python:3.15-slim AS build-image
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -22,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
  && pip uninstall -y pip
 # ^ pip isn't needed at runtime, and its vendored deps (bom.cdx.json) get flagged
 
-FROM --platform=linux/amd64 python:3.14-slim AS run-image
+FROM --platform=linux/amd64 python:3.15-slim AS run-image
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
